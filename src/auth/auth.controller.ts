@@ -41,7 +41,6 @@ export class AuthController {
   })
   @ApiUnauthorizedResponse({ description: 'Credenciales inválidas' })
   async login(@Body() body: LoginDto) {
-    console.log({ body });
     const user = await this.authService.validateUser(
       body.username,
       body.password,

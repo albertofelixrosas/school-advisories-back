@@ -1,47 +1,49 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsInt, IsDateString } from 'class-validator';
+import {
+  IsDateString,
+  IsNotEmpty,
+  IsArray,
+  IsInt,
+  Matches,
+} from 'class-validator';
 
 export class CreateAdvisoryDto {
-  @ApiProperty({
-    example: '2025-06-22T15:30:00',
-    description: 'Fecha y hora programada para la asesoría en formato ISO 8601',
-  })
-  @IsNotEmpty({ message: 'La fecha y hora de la asesoría es obligatoria' })
-  @IsDateString(
-    {},
-    { message: 'El formato de la fecha es inválido (debe ser ISO 8601)' },
-  )
-  scheduled_at: string;
+  @ApiProperty({ example: '2025-06-25', description: 'Fecha de la asesoría' })
+  @IsNotEmpty()
+  @IsDateString()
+  date: string;
 
   @ApiProperty({
-    example: 1,
-    description: 'ID del profesor que dará la asesoría',
+    example: '10:00',
+    description: 'Hora de inicio (formato HH:mm)',
   })
-  @IsNotEmpty({ message: 'El ID del profesor es obligatorio' })
-  @IsInt({ message: 'El ID del profesor debe ser un número entero' })
+  @IsNotEmpty()
+  @Matches(/^([0-1]\d|2[0-3]):([0-5]\d)$/, {
+    message: 'Formato de hora inválido',
+  })
+  begin_time: string;
+
+  @ApiProperty({ example: '11:30', description: 'Hora de fin (formato HH:mm)' })
+  @IsNotEmpty()
+  @Matches(/^([0-1]\d|2[0-3]):([0-5]\d)$/, {
+    message: 'Formato de hora inválido',
+  })
+  end_time: string;
+
+  @ApiProperty({ example: 1, description: 'ID del maestro' })
+  @IsInt()
   teacher_id: number;
 
-  @ApiProperty({
-    example: 3,
-    description: 'ID del estudiante que recibirá la asesoría',
-  })
-  @IsNotEmpty({ message: 'El ID del estudiante es obligatorio' })
-  @IsInt({ message: 'El ID del estudiante debe ser un número entero' })
-  student_id: number;
-
-  @ApiProperty({
-    example: 2,
-    description: 'ID de la materia relacionada con la asesoría',
-  })
-  @IsNotEmpty({ message: 'El ID de la materia es obligatorio' })
-  @IsInt({ message: 'El ID de la materia debe ser un número entero' })
+  @ApiProperty({ example: 3, description: 'ID de la materia' })
+  @IsInt()
   subject_id: number;
 
-  @ApiProperty({
-    example: 4,
-    description: 'ID de la ubicación donde se llevará a cabo la asesoría',
-  })
-  @IsNotEmpty({ message: 'El ID de la ubicación es obligatorio' })
-  @IsInt({ message: 'El ID de la ubicación debe ser un número entero' })
+  @ApiProperty({ example: 2, description: 'ID del lugar' })
+  @IsInt()
   location_id: number;
+
+  @ApiProperty({ example: [1, 2, 3], description: 'IDs de los estudiantes' })
+  @IsArray()
+  @IsInt({ each: true })
+  students: number[];
 }

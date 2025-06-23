@@ -26,101 +26,79 @@ export class AdvisoriesService {
 
   async create(dto: CreateAdvisoryDto) {
     const advisory = new Advisory();
-    advisory.scheduled_at = new Date(dto.scheduled_at);
+    advisory.date = dto.date;
+    advisory.begin_time = dto.begin_time;
+    advisory.end_time = dto.end_time;
 
-    const teacher = await this.teacherRepo.findOneBy({
-      teacher_id: dto.teacher_id,
-    });
+    const [teacher, subject, location] = await Promise.all([
+      this.teacherRepo.findOneBy({ teacher_id: dto.teacher_id }),
+      this.subjectRepo.findOneBy({ subject_id: dto.subject_id }),
+      this.locationRepo.findOneBy({ location_id: dto.location_id }),
+    ]);
+
     if (!teacher)
-      throw new NotFoundException(
-        `Teacher with ID ${dto.teacher_id} not found`,
-      );
-    advisory.teacher = teacher;
-
-    const student = await this.studentRepo.findOneBy({
-      student_id: dto.student_id,
-    });
-    if (!student)
-      throw new NotFoundException(
-        `Student with ID ${dto.student_id} not found`,
-      );
-    advisory.student = student;
-
-    const subject = await this.subjectRepo.findOneBy({
-      subject_id: dto.subject_id,
-    });
+      throw new NotFoundException(`Teacher ID ${dto.teacher_id} not found`);
     if (!subject)
-      throw new NotFoundException(
-        `Subject with ID ${dto.subject_id} not found`,
-      );
-    advisory.subject = subject;
-
-    const location = await this.locationRepo.findOneBy({
-      location_id: dto.location_id,
-    });
+      throw new NotFoundException(`Subject ID ${dto.subject_id} not found`);
     if (!location)
-      throw new NotFoundException(
-        `Location with ID ${dto.location_id} not found`,
-      );
+      throw new NotFoundException(`Location ID ${dto.location_id} not found`);
+
+    advisory.teacher = teacher;
+    advisory.subject = subject;
     advisory.location = location;
+
+    // Obtener estudiantes desde sus IDs
+    const students = await this.studentRepo.findByIds(dto.students);
+    if (students.length !== dto.students.length) {
+      throw new NotFoundException(`Some student IDs were not found`);
+    }
+    advisory.students = students;
 
     return this.advisoryRepo.save(advisory);
   }
 
   findAll() {
-    return this.advisoryRepo.find();
+    return this.advisoryRepo.find({
+      relations: ['teacher', 'subject', 'location', 'students'],
+    });
   }
 
-  findOne(id: number) {
-    return this.advisoryRepo.findOneBy({ advisory_id: id });
+  async findOne(id: number) {
+    const advisory = await this.advisoryRepo.findOne({
+      where: { advisory_id: id },
+      relations: ['teacher', 'subject', 'location', 'students'],
+    });
+
+    if (!advisory) throw new NotFoundException(`Advisory ID ${id} not found`);
+    return advisory;
   }
 
   async update(id: number, dto: UpdateAdvisoryDto) {
     const advisory = await this.advisoryRepo.findOne({
       where: { advisory_id: id },
+      relations: ['students'],
     });
+    if (!advisory) throw new NotFoundException(`Advisory ID ${id} not found`);
 
-    if (!advisory) {
-      throw new NotFoundException(`Advisory with ID ${id} not found`);
-    }
-
-    if (dto.scheduled_at) {
-      advisory.scheduled_at = new Date(dto.scheduled_at);
-    }
+    advisory.date = dto.date ?? advisory.date;
+    advisory.begin_time = dto.begin_time ?? advisory.begin_time;
+    advisory.end_time = dto.end_time ?? advisory.end_time;
 
     if (dto.teacher_id !== undefined) {
       const teacher = await this.teacherRepo.findOneBy({
         teacher_id: dto.teacher_id,
       });
-      if (!teacher) {
-        throw new NotFoundException(
-          `Teacher with ID ${dto.teacher_id} not found`,
-        );
-      }
+      if (!teacher)
+        throw new NotFoundException(`Teacher ID ${dto.teacher_id} not found`);
       advisory.teacher = teacher;
-    }
-
-    if (dto.student_id !== undefined) {
-      const student = await this.studentRepo.findOneBy({
-        student_id: dto.student_id,
-      });
-      if (!student) {
-        throw new NotFoundException(
-          `Student with ID ${dto.student_id} not found`,
-        );
-      }
-      advisory.student = student;
     }
 
     if (dto.subject_id !== undefined) {
       const subject = await this.subjectRepo.findOneBy({
         subject_id: dto.subject_id,
       });
-      if (!subject) {
-        throw new NotFoundException(
-          `Subject with ID ${dto.subject_id} not found`,
-        );
-      }
+      if (!subject)
+        throw new NotFoundException(`Subject ID ${dto.subject_id} not found`);
       advisory.subject = subject;
     }
 
@@ -128,18 +106,25 @@ export class AdvisoriesService {
       const location = await this.locationRepo.findOneBy({
         location_id: dto.location_id,
       });
-      if (!location) {
-        throw new NotFoundException(
-          `Location with ID ${dto.location_id} not found`,
-        );
-      }
+      if (!location)
+        throw new NotFoundException(`Location ID ${dto.location_id} not found`);
       advisory.location = location;
+    }
+
+    if (dto.students !== undefined) {
+      const students = await this.studentRepo.findByIds(dto.students);
+      if (students.length !== dto.students.length) {
+        throw new NotFoundException(`Some student IDs were not found`);
+      }
+      advisory.students = students;
     }
 
     return this.advisoryRepo.save(advisory);
   }
 
-  remove(id: number) {
+  async remove(id: number) {
+    const advisory = await this.advisoryRepo.findOneBy({ advisory_id: id });
+    if (!advisory) throw new NotFoundException(`Advisory ID ${id} not found`);
     return this.advisoryRepo.delete(id);
   }
 }

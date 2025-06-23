@@ -3,63 +3,54 @@ import {
   Get,
   Post,
   Body,
+  Patch,
   Param,
-  Put,
   Delete,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { AdvisoriesService } from './advisories.service';
 import { CreateAdvisoryDto } from './dto/create-advisory.dto';
 import { UpdateAdvisoryDto } from './dto/update-advisory.dto';
-import {
-  ApiBadRequestResponse,
-  ApiCreatedResponse,
-  ApiNotFoundResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiTags, ApiResponse } from '@nestjs/swagger';
 
-@ApiTags('Advisories')
+@ApiTags('advisories')
 @Controller('advisories')
 export class AdvisoriesController {
-  constructor(private readonly service: AdvisoriesService) {}
+  constructor(private readonly advisoriesService: AdvisoriesService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Crear una nueva asesoría' })
-  @ApiCreatedResponse({ description: 'Asesoría creada exitosamente' })
-  @ApiBadRequestResponse({ description: 'Datos inválidos o incompletos' })
-  create(@Body() dto: CreateAdvisoryDto) {
-    return this.service.create(dto);
+  @ApiResponse({ status: 201, description: 'Asesoría creada exitosamente' })
+  create(@Body() createAdvisoryDto: CreateAdvisoryDto) {
+    return this.advisoriesService.create(createAdvisoryDto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Listar todas las asesorías' })
-  @ApiOkResponse({ description: 'Lista de asesorías' })
+  @ApiResponse({ status: 200, description: 'Lista de asesorías' })
   findAll() {
-    return this.service.findAll();
+    return this.advisoriesService.findAll();
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Obtener una asesoría por ID' })
-  @ApiOkResponse({ description: 'Asesoría encontrada' })
-  @ApiNotFoundResponse({ description: 'Asesoría no encontrada' })
-  findOne(@Param('id') id: string) {
-    return this.service.findOne(+id);
+  @ApiResponse({ status: 200, description: 'Detalle de asesoría' })
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.advisoriesService.findOne(id);
   }
 
-  @Put(':id')
-  @ApiOperation({ summary: 'Actualizar una asesoría por ID' })
-  @ApiOkResponse({ description: 'Asesoría actualizada correctamente' })
-  @ApiNotFoundResponse({ description: 'Asesoría no encontrada' })
-  update(@Param('id') id: string, @Body() dto: UpdateAdvisoryDto) {
-    return this.service.update(+id, dto);
+  @Patch(':id')
+  @ApiResponse({
+    status: 200,
+    description: 'Asesoría actualizada exitosamente',
+  })
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateAdvisoryDto: UpdateAdvisoryDto,
+  ) {
+    return this.advisoriesService.update(id, updateAdvisoryDto);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Eliminar una asesoría por ID' })
-  @ApiOkResponse({ description: 'Asesoría eliminada correctamente' })
-  @ApiNotFoundResponse({ description: 'Asesoría no encontrada' })
-  remove(@Param('id') id: string) {
-    return this.service.remove(+id);
+  @ApiResponse({ status: 200, description: 'Asesoría eliminada' })
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.advisoriesService.remove(id);
   }
 }
