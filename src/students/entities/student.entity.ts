@@ -1,5 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { Advisory } from '../../advisories/entities/advisory.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany } from 'typeorm';
+import { Advisory } from 'src/advisories/entities/advisory.entity';
 
 @Entity('students')
 export class Student {
@@ -9,6 +9,18 @@ export class Student {
   @Column()
   name: string;
 
-  @OneToMany(() => Advisory, (advisory) => advisory.student)
+  @Column()
+  last_name: string;
+
+  @Column({ unique: true })
+  email: string;
+
+  @Column({ nullable: true })
+  phone_number: string;
+
+  @Column()
+  school_id: number;
+
+  @ManyToMany(() => Advisory, (advisory) => advisory.students)
   advisories: Advisory[];
 }

@@ -1,14 +1,17 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { Advisory } from '../../advisories/entities/advisory.entity';
+import { Advisory } from 'src/advisories/entities/advisory.entity';
 
 @Entity('locations')
 export class Location {
   @PrimaryGeneratedColumn()
   location_id: number;
 
-  @Column()
-  description: string;
+  @Column({ unique: true })
+  location: string;
 
-  @OneToMany(() => Advisory, (advisory) => advisory.student)
+  @Column()
+  location_type: string;
+
+  @OneToMany(() => Advisory, (advisory) => advisory.location)
   advisories: Advisory[];
 }

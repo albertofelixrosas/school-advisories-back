@@ -1,13 +1,18 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, Length } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateLocationDto {
-  @ApiPropertyOptional({
-    example: 'Aula 670',
-    description: 'El nombre para el lugar donde se dará la asesoria',
+  @ApiProperty({
+    example: 'Aula B3',
+    description:
+      'Nombre del lugar fisico (aula o salón) o URL de enlace en linea',
   })
-  @IsNotEmpty({ message: 'La descripción no puede estar vacío' })
-  @IsString({ message: 'La descripción debe ser una cadena' })
-  @Length(1, 100)
-  description: string;
+  @IsNotEmpty()
+  @IsString()
+  location: string;
+
+  @ApiProperty({ example: 'Aula', description: 'Tipo de espacio' })
+  @IsNotEmpty()
+  @IsString()
+  location_type: string;
 }

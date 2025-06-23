@@ -30,7 +30,11 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('School Advisories API')
-    .setDescription('API para gestión de asesorías')
+    .setDescription(
+      `<p>Esta es la documentación de la API de asesorias.</p>
+    <p><strong>Diagrama Entidad-Relación:</strong></p>
+    <img src="/docs/images/er-diagram-black.svg" alt="ER Diagram" width="100%"/>`,
+    )
     .setVersion('1.0')
     .addBearerAuth()
     .build();

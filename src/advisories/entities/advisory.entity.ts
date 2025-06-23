@@ -3,34 +3,51 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
-  JoinColumn,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
-import { Teacher } from '../../teachers/entities/teacher.entity';
-import { Student } from '../../students/entities/student.entity';
-import { Subject } from '../../subjects/entities/subject.entity';
-import { Location } from '../../locations/entities/location.entity';
+import { Teacher } from 'src/teachers/entities/teacher.entity';
+import { Subject } from 'src/subjects/entities/subject.entity';
+import { Location } from 'src/locations/entities/location.entity';
+import { Student } from 'src/students/entities/student.entity';
 
 @Entity('advisories')
 export class Advisory {
   @PrimaryGeneratedColumn()
   advisory_id: number;
 
-  @Column()
-  scheduled_at: Date;
+  @Column({ type: 'date' })
+  date: string;
 
-  @ManyToOne(() => Teacher, { eager: true })
-  @JoinColumn({ name: 'teacher_id' })
+  @Column({ type: 'time' })
+  begin_time: string;
+
+  @Column({ type: 'time' })
+  end_time: string;
+
+  @ManyToOne(() => Teacher, (teacher) => teacher.advisories, {
+    nullable: false,
+  })
   teacher: Teacher;
 
-  @ManyToOne(() => Student, { eager: true })
-  @JoinColumn({ name: 'student_id' })
-  student: Student;
-
-  @ManyToOne(() => Subject, { eager: true })
-  @JoinColumn({ name: 'subject_id' })
+  @ManyToOne(() => Subject, (subject) => subject.advisories, {
+    nullable: false,
+  })
   subject: Subject;
 
-  @ManyToOne(() => Location, { eager: true })
-  @JoinColumn({ name: 'location_id' })
+  @ManyToOne(() => Location, (location) => location.advisories, {
+    nullable: false,
+  })
   location: Location;
+
+  @ManyToMany(() => Student, (student) => student.advisories)
+  @JoinTable({
+    name: 'advisory_students',
+    joinColumn: { name: 'advisory_id', referencedColumnName: 'advisory_id' },
+    inverseJoinColumn: {
+      name: 'student_id',
+      referencedColumnName: 'student_id',
+    },
+  })
+  students: Student[];
 }
