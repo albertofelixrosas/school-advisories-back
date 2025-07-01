@@ -6,6 +6,7 @@ import {
   Param,
   Put,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { LocationsService } from './locations.service';
 import { CreateLocationDto } from './dto/create-location.dto';
@@ -18,8 +19,13 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { UserRole } from 'src/users/user-role.enum';
 
 @ApiTags('Locations')
+@UseGuards(JwtAuthGuard, RolesGuard) // Asegura que solo usuarios autenticados puedan acceder
 @Controller('locations')
 export class LocationsController {
   constructor(private readonly service: LocationsService) {}
@@ -33,6 +39,7 @@ export class LocationsController {
   }
 
   @Get()
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Listar todas las ubicaciones' })
   @ApiOkResponse({ description: 'Lista de ubicaciones' })
   findAll() {
@@ -40,6 +47,7 @@ export class LocationsController {
   }
 
   @Get(':id')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Obtener una ubicación por ID' })
   @ApiOkResponse({ description: 'Ubicación encontrada' })
   @ApiNotFoundResponse({ description: 'Ubicación no encontrada' })
@@ -48,6 +56,7 @@ export class LocationsController {
   }
 
   @Put(':id')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Actualizar una ubicación por ID' })
   @ApiOkResponse({ description: 'Ubicación actualizada correctamente' })
   @ApiNotFoundResponse({ description: 'Ubicación no encontrada' })
@@ -56,6 +65,7 @@ export class LocationsController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Eliminar una ubicación por ID' })
   @ApiOkResponse({ description: 'Ubicación eliminada correctamente' })
   @ApiNotFoundResponse({ description: 'Ubicación no encontrada' })

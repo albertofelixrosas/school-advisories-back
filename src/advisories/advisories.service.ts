@@ -9,6 +9,8 @@ import { Student } from '../students/entities/student.entity';
 import { Subject } from '../subjects/entities/subject.entity';
 import { Location } from '../locations/entities/location.entity';
 
+import { In } from 'typeorm';
+
 @Injectable()
 export class AdvisoriesService {
   constructor(
@@ -43,12 +45,59 @@ export class AdvisoriesService {
     if (!location)
       throw new NotFoundException(`Location ID ${dto.location_id} not found`);
 
+    // Validar que el maestro, el lugar y algun estudiante no estén ya asignados a otra asesoría en el mismo rango de tiempo
+    const existingAdvisories = await this.advisoryRepo.find({
+      where: [
+        { teacher: { teacher_id: dto.teacher_id }, date: dto.date },
+        { location: { location_id: dto.location_id }, date: dto.date },
+      ],
+      relations: ['students'],
+    });
+    const studentIds = dto.students || [];
+    const studentIdsSet = new Set(studentIds);
+    for (const advisory of existingAdvisories) {
+      if (
+        advisory.begin_time < dto.end_time &&
+        advisory.end_time > dto.begin_time
+      ) {
+        if (advisory.teacher.teacher_id === dto.teacher_id) {
+          throw new NotFoundException(
+            `Teacher ID ${dto.teacher_id} is already assigned to another advisory at this time`,
+          );
+        }
+        if (advisory.location.location_id === dto.location_id) {
+          throw new NotFoundException(
+            `Location ID ${dto.location_id} is already booked for another advisory at this time`,
+          );
+        }
+        for (const student of advisory.students) {
+          if (studentIdsSet.has(student.student_id)) {
+            throw new NotFoundException(
+              `Student ID ${student.student_id} is already assigned to another advisory at this time`,
+            );
+          }
+        }
+      }
+    }
+
     advisory.teacher = teacher;
     advisory.subject = subject;
     advisory.location = location;
-
-    // Obtener estudiantes desde sus IDs
-    const students = await this.studentRepo.findByIds(dto.students);
+    advisory.description = dto.description ?? null;
+    if (!Array.isArray(dto.students) || dto.students.length === 0) {
+      throw new NotFoundException(`Students list cannot be empty`);
+    }
+    if (dto.students.some((id) => typeof id !== 'number')) {
+      throw new NotFoundException(`All student IDs must be numbers`);
+    }
+    if (new Set(dto.students).size !== dto.students.length) {
+      throw new NotFoundException(`Duplicate student IDs are not allowed`);
+    }
+    const students = await this.studentRepo.find({
+      where: {
+        student_id: In(dto.students),
+      },
+    });
     if (students.length !== dto.students.length) {
       throw new NotFoundException(`Some student IDs were not found`);
     }
@@ -112,7 +161,15 @@ export class AdvisoriesService {
     }
 
     if (dto.students !== undefined) {
-      const students = await this.studentRepo.findByIds(dto.students);
+      if (!Array.isArray(dto.students) || dto.students.length === 0) {
+        throw new NotFoundException(`Students list cannot be empty`);
+      }
+
+      const students = await this.studentRepo.find({
+        where: {
+          student_id: In(dto.students),
+        },
+      });
       if (students.length !== dto.students.length) {
         throw new NotFoundException(`Some student IDs were not found`);
       }

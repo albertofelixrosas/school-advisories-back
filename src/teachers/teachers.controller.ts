@@ -6,6 +6,7 @@ import {
   Param,
   Put,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { TeachersService } from './teachers.service';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
@@ -18,13 +19,19 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { UserRole } from 'src/users/user-role.enum';
 
 @ApiTags('Teachers')
+@UseGuards(JwtAuthGuard, RolesGuard) // Asegura que solo usuarios autenticados puedan acceder
 @Controller('teachers')
 export class TeachersController {
   constructor(private readonly teachersService: TeachersService) {}
 
   @Post()
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Crear un nuevo maestro' })
   @ApiCreatedResponse({ description: 'Maestro creado exitosamente' })
   @ApiBadRequestResponse({ description: 'Datos inválidos o incompletos' })
@@ -33,6 +40,7 @@ export class TeachersController {
   }
 
   @Get()
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Listar todos los maestros' })
   @ApiOkResponse({ description: 'Lista de maestros' })
   findAll() {
@@ -40,6 +48,7 @@ export class TeachersController {
   }
 
   @Get(':id')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Obtener un maestro por ID' })
   @ApiOkResponse({ description: 'Maestro encontrado' })
   @ApiNotFoundResponse({ description: 'Maestro no encontrado' })
@@ -48,6 +57,7 @@ export class TeachersController {
   }
 
   @Put(':id')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Actualizar un maestro por ID' })
   @ApiOkResponse({ description: 'Maestro actualizado exitosamente' })
   @ApiNotFoundResponse({ description: 'Maestro no encontrado' })
@@ -56,6 +66,7 @@ export class TeachersController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Eliminar un maestro por ID' })
   @ApiOkResponse({ description: 'Maestro eliminado exitosamente' })
   @ApiNotFoundResponse({ description: 'Maestro no encontrado' })
