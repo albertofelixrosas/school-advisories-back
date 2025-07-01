@@ -46,4 +46,11 @@ export class CreateAdvisoryDto {
   @IsArray()
   @IsInt({ each: true })
   students: number[];
+
+  @ApiProperty({
+    example: 'Asesoría sobre el tema de álgebra lineal',
+    description: 'Descripción detallada de la asesoría',
+    required: false,
+  })
+  description: string;
 }

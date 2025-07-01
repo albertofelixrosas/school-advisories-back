@@ -16,13 +16,16 @@ export class Advisory {
   @PrimaryGeneratedColumn()
   advisory_id: number;
 
-  @Column({ type: 'date' })
+  @Column({ type: 'text', nullable: false })
+  description: string;
+
+  @Column({ type: 'date', nullable: false })
   date: string;
 
-  @Column({ type: 'time' })
+  @Column({ type: 'time', nullable: false })
   begin_time: string;
 
-  @Column({ type: 'time' })
+  @Column({ type: 'time', nullable: false })
   end_time: string;
 
   @ManyToOne(() => Teacher, (teacher) => teacher.advisories, {

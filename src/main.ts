@@ -4,8 +4,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerTheme, SwaggerThemeNameEnum } from 'swagger-themes';
-// import { RolesGuard } from './auth/roles.guard';
-// import { APP_GUARD } from '@nestjs/core';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -53,6 +51,3 @@ async function bootstrap() {
 }
 
 bootstrap();
-
-// https://chatgpt.com/share/6858930c-5148-8013-8bca-00e8098b9254
-// alberto.felix.js@gmail.com
