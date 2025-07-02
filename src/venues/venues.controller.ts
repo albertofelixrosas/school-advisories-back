@@ -8,11 +8,12 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
-import { LocationsService } from './locations.service';
-import { CreateLocationDto } from './dto/create-location.dto';
-import { UpdateLocationDto } from './dto/update-location.dto';
+import { VenuesService } from './venues.service';
+import { CreateVenueDto } from './dto/create-venue.dto';
+import { UpdateVenueDto } from './dto/update-venue.dto';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -23,19 +24,22 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { UserRole } from 'src/users/user-role.enum';
+import { VenueType } from './venue-type.enum';
 
-@ApiTags('Locations')
+@ApiTags('Venues')
+@ApiBearerAuth('jwt-auth')
 @UseGuards(JwtAuthGuard, RolesGuard) // Asegura que solo usuarios autenticados puedan acceder
-@Controller('locations')
-export class LocationsController {
-  constructor(private readonly service: LocationsService) {}
+@Controller('venues')
+export class VenuesController {
+  constructor(private readonly venuesService: VenuesService) {}
 
   @Post()
   @ApiOperation({ summary: 'Crear una nueva ubicación' })
   @ApiCreatedResponse({ description: 'Ubicación creada exitosamente' })
   @ApiBadRequestResponse({ description: 'Datos inválidos o incompletos' })
-  create(@Body() dto: CreateLocationDto) {
-    return this.service.create(dto);
+  create(@Body() dto: CreateVenueDto) {
+    this.validateVenueDto(dto);
+    return this.venuesService.create(dto);
   }
 
   @Get()
@@ -43,7 +47,7 @@ export class LocationsController {
   @ApiOperation({ summary: 'Listar todas las ubicaciones' })
   @ApiOkResponse({ description: 'Lista de ubicaciones' })
   findAll() {
-    return this.service.findAll();
+    return this.venuesService.findAll();
   }
 
   @Get(':id')
@@ -52,7 +56,7 @@ export class LocationsController {
   @ApiOkResponse({ description: 'Ubicación encontrada' })
   @ApiNotFoundResponse({ description: 'Ubicación no encontrada' })
   findOne(@Param('id') id: string) {
-    return this.service.findOne(+id);
+    return this.venuesService.findOne(+id);
   }
 
   @Put(':id')
@@ -60,8 +64,9 @@ export class LocationsController {
   @ApiOperation({ summary: 'Actualizar una ubicación por ID' })
   @ApiOkResponse({ description: 'Ubicación actualizada correctamente' })
   @ApiNotFoundResponse({ description: 'Ubicación no encontrada' })
-  update(@Param('id') id: string, @Body() dto: UpdateLocationDto) {
-    return this.service.update(+id, dto);
+  update(@Param('id') id: string, @Body() dto: UpdateVenueDto) {
+    this.validateVenueDto(dto);
+    return this.venuesService.update(+id, dto);
   }
 
   @Delete(':id')
@@ -70,6 +75,32 @@ export class LocationsController {
   @ApiOkResponse({ description: 'Ubicación eliminada correctamente' })
   @ApiNotFoundResponse({ description: 'Ubicación no encontrada' })
   remove(@Param('id') id: string) {
-    return this.service.remove(+id);
+    return this.venuesService.remove(+id);
+  }
+
+  validateVenueDto(dto: CreateVenueDto | UpdateVenueDto) {
+    const { type, url, building, floor } = dto;
+    if (type === VenueType.VIRTUAL && !url) {
+      throw new Error('La URL es obligatoria para ubicaciones virtuales');
+    }
+    if (
+      (type === VenueType.CLASSROOM || type === VenueType.OFFICE) &&
+      (!building || !floor)
+    ) {
+      throw new Error(
+        'El edificio y el piso son obligatorios para aulas y oficinas',
+      );
+    }
+    if (type === VenueType.VIRTUAL && (building || floor)) {
+      throw new Error(
+        'Edificio y piso no deben ser especificados para ubicaciones virtuales',
+      );
+    }
+    if (
+      (type === VenueType.CLASSROOM || type === VenueType.OFFICE) &&
+      (url || !building || !floor)
+    ) {
+      throw new Error('La URL no debe ser especificada para aulas y oficinas');
+    }
   }
 }

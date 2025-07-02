@@ -90,6 +90,6 @@ export class AuthController {
     description: 'Token JWT inválido o faltante',
   })
   logout(@Req() req: RequestWithUser) {
-    return this.authService.logout(req.user.id);
+    return this.authService.logout(req.user.user_id);
   }
 }

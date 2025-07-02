@@ -13,5 +13,5 @@ export class RefreshToken {
   user: User;
 
   @Column({ type: 'timestamp' })
-  expiresAt: Date;
+  expires_at: Date;
 }

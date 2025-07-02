@@ -23,6 +23,6 @@ export class RefreshTokenRepository {
   }
 
   async deleteByUserId(userId: number) {
-    return this.repo.delete({ user: { id: userId } });
+    return this.repo.delete({ user: { user_id: userId } });
   }
 }

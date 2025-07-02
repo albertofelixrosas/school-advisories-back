@@ -27,7 +27,11 @@ export class AuthService {
   }
 
   async login(user: UserPayload) {
-    const payload = { username: user.username, sub: user.id, role: user.role };
+    const payload = {
+      username: user.username,
+      sub: user.user_id,
+      role: user.role,
+    };
 
     const access_token = this.jwtService.sign(payload, { expiresIn: '15m' });
     const refresh_token = this.jwtService.sign(payload, { expiresIn: '7d' });
@@ -36,8 +40,8 @@ export class AuthService {
 
     const tokenEntity = this.refreshTokenRepo.create({
       token: refresh_token,
-      user: { id: user.id },
-      expiresAt,
+      user: { user_id: user.user_id },
+      expires_at: expiresAt,
     });
 
     await this.refreshTokenRepo.save(tokenEntity);
@@ -55,21 +59,22 @@ export class AuthService {
       // TODO: Aquí hay que consultar, podría dar error esta linea, (verify<{ sub: number }> no tenia antes el generico)
       const decoded = this.jwtService.verify<{ sub: number }>(refresh_token);
       const user = await this.usersService.findByUsername(username);
-      if (!user || user.id !== decoded.sub) throw new UnauthorizedException();
+      if (!user || user.user_id !== decoded.sub)
+        throw new UnauthorizedException();
 
       const storedToken = await this.refreshTokenRepo.findOne({
         where: {
           token: refresh_token,
-          user: { id: user.id },
+          user: { user_id: user.user_id },
         },
       });
 
-      if (!storedToken || storedToken.expiresAt < new Date()) {
+      if (!storedToken || storedToken.expires_at < new Date()) {
         throw new UnauthorizedException('Token expirado o inválido');
       }
 
       const newAccessToken = this.jwtService.sign(
-        { username: user.username, sub: user.id },
+        { username: user.username, sub: user.user_id },
         { expiresIn: '15m' },
       );
 
@@ -80,6 +85,6 @@ export class AuthService {
   }
 
   async logout(userId: number) {
-    await this.refreshTokenRepo.delete({ user: { id: userId } });
+    await this.refreshTokenRepo.delete({ user: { user_id: userId } });
   }
 }

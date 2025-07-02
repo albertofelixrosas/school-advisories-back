@@ -5,11 +5,11 @@ import {
   ManyToOne,
   ManyToMany,
   JoinTable,
+  JoinColumn,
 } from 'typeorm';
-import { Teacher } from 'src/teachers/entities/teacher.entity';
 import { Subject } from 'src/subjects/entities/subject.entity';
-import { Location } from 'src/locations/entities/location.entity';
-import { Student } from 'src/students/entities/student.entity';
+import { Venue } from 'src/venues/entities/venue.entity';
+import { User } from 'src/users/entities/user.entity';
 
 @Entity('advisories')
 export class Advisory {
@@ -28,29 +28,25 @@ export class Advisory {
   @Column({ type: 'time', nullable: false })
   end_time: string;
 
-  @ManyToOne(() => Teacher, (teacher) => teacher.advisories, {
-    nullable: false,
-  })
-  teacher: Teacher;
+  @ManyToOne(() => User, { nullable: false })
+  @JoinColumn({ name: 'teacher_id' })
+  teacher: User;
 
   @ManyToOne(() => Subject, (subject) => subject.advisories, {
     nullable: false,
   })
   subject: Subject;
 
-  @ManyToOne(() => Location, (location) => location.advisories, {
+  @ManyToOne(() => Venue, (venue) => venue.advisories, {
     nullable: false,
   })
-  location: Location;
+  venue: Venue;
 
-  @ManyToMany(() => Student, (student) => student.advisories)
+  @ManyToMany(() => User)
   @JoinTable({
     name: 'advisory_students',
     joinColumn: { name: 'advisory_id', referencedColumnName: 'advisory_id' },
-    inverseJoinColumn: {
-      name: 'student_id',
-      referencedColumnName: 'student_id',
-    },
+    inverseJoinColumn: { name: 'student_id', referencedColumnName: 'user_id' },
   })
-  students: Student[];
+  students: User[];
 }
