@@ -13,6 +13,7 @@ import { CreateSubjectDto } from './dto/create-subject.dto';
 import { UpdateSubjectDto } from './dto/update-subject.dto';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -25,6 +26,7 @@ import { Roles } from 'src/auth/roles.decorator';
 import { UserRole } from 'src/users/user-role.enum';
 
 @ApiTags('Subjects')
+@ApiBearerAuth('jwt-auth')
 @UseGuards(JwtAuthGuard, RolesGuard) // Asegura que solo usuarios autenticados puedan acceder
 @Controller('subjects')
 export class SubjectsController {

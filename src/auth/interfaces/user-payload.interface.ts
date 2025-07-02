@@ -1,7 +1,7 @@
 import { UserRole } from '../../users/user-role.enum';
 
 export interface UserPayload {
-  id: number;
+  user_id: number;
   username: string;
   role: UserRole;
 }

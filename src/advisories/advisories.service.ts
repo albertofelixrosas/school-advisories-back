@@ -4,26 +4,24 @@ import { Repository } from 'typeorm';
 import { Advisory } from './entities/advisory.entity';
 import { CreateAdvisoryDto } from './dto/create-advisory.dto';
 import { UpdateAdvisoryDto } from './dto/update-advisory.dto';
-import { Teacher } from '../teachers/entities/teacher.entity';
-import { Student } from '../students/entities/student.entity';
 import { Subject } from '../subjects/entities/subject.entity';
-import { Location } from '../locations/entities/location.entity';
+import { Venue } from '../venues/entities/venue.entity';
 
 import { In } from 'typeorm';
+import { User } from 'src/users/entities/user.entity';
+import { UserRole } from 'src/users/user-role.enum';
 
 @Injectable()
 export class AdvisoriesService {
   constructor(
     @InjectRepository(Advisory)
     private readonly advisoryRepo: Repository<Advisory>,
-    @InjectRepository(Teacher)
-    private readonly teacherRepo: Repository<Teacher>,
-    @InjectRepository(Student)
-    private readonly studentRepo: Repository<Student>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
     @InjectRepository(Subject)
     private readonly subjectRepo: Repository<Subject>,
-    @InjectRepository(Location)
-    private readonly locationRepo: Repository<Location>,
+    @InjectRepository(Venue)
+    private readonly venueRepo: Repository<Venue>,
   ) {}
 
   async create(dto: CreateAdvisoryDto) {
@@ -31,76 +29,83 @@ export class AdvisoriesService {
     advisory.date = dto.date;
     advisory.begin_time = dto.begin_time;
     advisory.end_time = dto.end_time;
+    advisory.description = dto.description ?? '';
 
-    const [teacher, subject, location] = await Promise.all([
-      this.teacherRepo.findOneBy({ teacher_id: dto.teacher_id }),
+    const [teacher, subject, venue] = await Promise.all([
+      this.userRepo.findOneBy({
+        user_id: dto.teacher_id,
+        role: UserRole.TEACHER,
+      }),
       this.subjectRepo.findOneBy({ subject_id: dto.subject_id }),
-      this.locationRepo.findOneBy({ location_id: dto.location_id }),
+      this.venueRepo.findOneBy({ venue_id: dto.venue_id }),
     ]);
 
     if (!teacher)
       throw new NotFoundException(`Teacher ID ${dto.teacher_id} not found`);
     if (!subject)
       throw new NotFoundException(`Subject ID ${dto.subject_id} not found`);
-    if (!location)
-      throw new NotFoundException(`Location ID ${dto.location_id} not found`);
+    if (!venue)
+      throw new NotFoundException(`Venue ID ${dto.venue_id} not found`);
 
-    // Validar que el maestro, el lugar y algun estudiante no estén ya asignados a otra asesoría en el mismo rango de tiempo
-    const existingAdvisories = await this.advisoryRepo.find({
+    // Validar conflictos
+    const existing = await this.advisoryRepo.find({
       where: [
-        { teacher: { teacher_id: dto.teacher_id }, date: dto.date },
-        { location: { location_id: dto.location_id }, date: dto.date },
+        { teacher: { user_id: dto.teacher_id }, date: dto.date },
+        { venue: { venue_id: dto.venue_id }, date: dto.date },
       ],
-      relations: ['students'],
+      relations: ['students', 'teacher', 'venues'],
     });
-    const studentIds = dto.students || [];
-    const studentIdsSet = new Set(studentIds);
-    for (const advisory of existingAdvisories) {
-      if (
+
+    const studentIds = new Set(dto.students);
+    for (const advisory of existing) {
+      const overlaps =
         advisory.begin_time < dto.end_time &&
-        advisory.end_time > dto.begin_time
-      ) {
-        if (advisory.teacher.teacher_id === dto.teacher_id) {
+        advisory.end_time > dto.begin_time;
+
+      if (overlaps) {
+        if (advisory.teacher.user_id === dto.teacher_id) {
           throw new NotFoundException(
-            `Teacher ID ${dto.teacher_id} is already assigned to another advisory at this time`,
+            `Teacher ID ${dto.teacher_id} has a conflict`,
           );
         }
-        if (advisory.location.location_id === dto.location_id) {
+        if (advisory.venue.venue_id === dto.venue_id) {
           throw new NotFoundException(
-            `Location ID ${dto.location_id} is already booked for another advisory at this time`,
+            `Venue ID ${dto.venue_id} has a conflict`,
           );
         }
-        for (const student of advisory.students) {
-          if (studentIdsSet.has(student.student_id)) {
+        for (const s of advisory.students) {
+          if (studentIds.has(s.user_id)) {
             throw new NotFoundException(
-              `Student ID ${student.student_id} is already assigned to another advisory at this time`,
+              `Student ID ${s.user_id} has a conflict`,
             );
           }
         }
       }
     }
 
-    advisory.teacher = teacher;
-    advisory.subject = subject;
-    advisory.location = location;
-    advisory.description = dto.description ?? null;
-    if (!Array.isArray(dto.students) || dto.students.length === 0) {
+    // Obtener estudiantes
+    if (
+      !dto.students ||
+      !Array.isArray(dto.students) ||
+      dto.students.length === 0
+    ) {
       throw new NotFoundException(`Students list cannot be empty`);
     }
-    if (dto.students.some((id) => typeof id !== 'number')) {
-      throw new NotFoundException(`All student IDs must be numbers`);
-    }
-    if (new Set(dto.students).size !== dto.students.length) {
-      throw new NotFoundException(`Duplicate student IDs are not allowed`);
-    }
-    const students = await this.studentRepo.find({
+
+    const students = await this.userRepo.find({
       where: {
-        student_id: In(dto.students),
+        user_id: In(dto.students),
+        role: UserRole.STUDENT,
       },
     });
+
     if (students.length !== dto.students.length) {
       throw new NotFoundException(`Some student IDs were not found`);
     }
+
+    advisory.teacher = teacher;
+    advisory.subject = subject;
+    advisory.venue = venue;
     advisory.students = students;
 
     return this.advisoryRepo.save(advisory);
@@ -108,14 +113,14 @@ export class AdvisoriesService {
 
   findAll() {
     return this.advisoryRepo.find({
-      relations: ['teacher', 'subject', 'location', 'students'],
+      relations: ['teacher', 'subject', 'venue', 'students'],
     });
   }
 
   async findOne(id: number) {
     const advisory = await this.advisoryRepo.findOne({
       where: { advisory_id: id },
-      relations: ['teacher', 'subject', 'location', 'students'],
+      relations: ['teacher', 'subject', 'venue', 'students'],
     });
 
     if (!advisory) throw new NotFoundException(`Advisory ID ${id} not found`);
@@ -125,54 +130,76 @@ export class AdvisoriesService {
   async update(id: number, dto: UpdateAdvisoryDto) {
     const advisory = await this.advisoryRepo.findOne({
       where: { advisory_id: id },
-      relations: ['students'],
+      relations: ['students', 'teacher', 'subject', 'venue'],
     });
-    if (!advisory) throw new NotFoundException(`Advisory ID ${id} not found`);
 
+    if (!advisory) {
+      throw new NotFoundException(`Advisory ID ${id} not found`);
+    }
+
+    // ✅ Actualizar datos básicos
     advisory.date = dto.date ?? advisory.date;
     advisory.begin_time = dto.begin_time ?? advisory.begin_time;
     advisory.end_time = dto.end_time ?? advisory.end_time;
+    advisory.description = dto.description ?? advisory.description;
 
+    // ✅ Validar y actualizar teacher
     if (dto.teacher_id !== undefined) {
-      const teacher = await this.teacherRepo.findOneBy({
-        teacher_id: dto.teacher_id,
+      const teacher = await this.userRepo.findOneBy({
+        user_id: dto.teacher_id,
+        role: UserRole.TEACHER,
       });
-      if (!teacher)
+
+      if (!teacher) {
         throw new NotFoundException(`Teacher ID ${dto.teacher_id} not found`);
+      }
+
       advisory.teacher = teacher;
     }
 
+    // ✅ Validar y actualizar subject
     if (dto.subject_id !== undefined) {
       const subject = await this.subjectRepo.findOneBy({
         subject_id: dto.subject_id,
       });
-      if (!subject)
+
+      if (!subject) {
         throw new NotFoundException(`Subject ID ${dto.subject_id} not found`);
+      }
+
       advisory.subject = subject;
     }
 
-    if (dto.location_id !== undefined) {
-      const location = await this.locationRepo.findOneBy({
-        location_id: dto.location_id,
+    // ✅ Validar y actualizar location
+    if (dto.venue_id !== undefined) {
+      const venue = await this.venueRepo.findOneBy({
+        venue_id: dto.venue_id,
       });
-      if (!location)
-        throw new NotFoundException(`Location ID ${dto.location_id} not found`);
-      advisory.location = location;
+
+      if (!venue) {
+        throw new NotFoundException(`Venue ID ${dto.venue_id} not found`);
+      }
+
+      advisory.venue = venue;
     }
 
+    // ✅ Validar y actualizar lista de estudiantes
     if (dto.students !== undefined) {
       if (!Array.isArray(dto.students) || dto.students.length === 0) {
         throw new NotFoundException(`Students list cannot be empty`);
       }
 
-      const students = await this.studentRepo.find({
+      const students = await this.userRepo.find({
         where: {
-          student_id: In(dto.students),
+          user_id: In(dto.students),
+          role: UserRole.STUDENT,
         },
       });
+
       if (students.length !== dto.students.length) {
         throw new NotFoundException(`Some student IDs were not found`);
       }
+
       advisory.students = students;
     }
 

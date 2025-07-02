@@ -1,11 +1,46 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsEmail,
+  IsPhoneNumber,
+  IsInt,
+} from 'class-validator';
 import { UserRole } from '../user-role.enum';
 
 export class CreateUserDto {
   @ApiProperty({
-    example: 'nuevo_usuario',
-    description: 'Nombre de usuario a registrar',
+    example: 'juan',
+    description: 'Nombre del usuario',
+  })
+  @IsString()
+  name: string;
+
+  @ApiProperty({
+    example: 'pérez',
+    description: 'Apellido del usuario',
+  })
+  @IsString()
+  last_name: string;
+
+  @ApiProperty({
+    example: 'juan.perez@example.com',
+    description: 'Correo electrónico del usuario',
+  })
+  @IsEmail()
+  email: string;
+
+  @ApiProperty({
+    example: '+526423456789',
+    description: 'Número de teléfono del usuario con lada',
+  })
+  @IsPhoneNumber('MX')
+  phone_number: string;
+
+  @ApiProperty({
+    example: 'juan123',
+    description: 'Nombre de usuario para iniciar sesión',
   })
   @IsString()
   username: string;
@@ -18,9 +53,17 @@ export class CreateUserDto {
   password: string;
 
   @ApiProperty({
+    example: 2,
+    description: 'ID de la escuela a la que pertenece el usuario',
+  })
+  @IsInt()
+  school_id: number;
+
+  @ApiProperty({
     example: 'student',
     description: 'Rol del usuario (admin, teacher, student)',
     required: false,
+    enum: UserRole,
   })
   @IsOptional()
   @IsEnum(UserRole)

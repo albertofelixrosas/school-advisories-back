@@ -29,12 +29,21 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('School Advisories API')
     .setDescription(
-      `<p>Esta es la documentación de la API de asesorias.</p>
-    <p><strong>Diagrama Entidad-Relación:</strong></p>
-    <img src="/docs/images/er-diagram-black.svg" alt="ER Diagram" width="100%"/>`,
+      `<p>Esta es la documentación de la API de asesorías.</p>
+  <p><strong>Diagrama Entidad-Relación:</strong></p>
+  <img src="/docs/images/er-diagram-black.svg" alt="ER Diagram" width="100%"/>`,
     )
     .setVersion('1.0')
-    .addBearerAuth()
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'Authorization',
+        in: 'header',
+      },
+      'jwt-auth', // nombre único
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

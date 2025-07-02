@@ -12,60 +12,68 @@ import {
 import { AdvisoriesService } from './advisories.service';
 import { CreateAdvisoryDto } from './dto/create-advisory.dto';
 import { UpdateAdvisoryDto } from './dto/update-advisory.dto';
-import { ApiTags, ApiResponse } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiOkResponse,
+  ApiCreatedResponse,
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
+} from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { UserRole } from 'src/users/user-role.enum';
 
 @ApiTags('Advisories')
-@UseGuards(JwtAuthGuard, RolesGuard) // Asegura que solo usuarios autenticados puedan acceder
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('advisories')
 export class AdvisoriesController {
   constructor(private readonly advisoriesService: AdvisoriesService) {}
 
   @Post()
-  @Roles(UserRole.ADMIN, UserRole.TEACHER)
-  @ApiResponse({ status: 201, description: 'Asesoría creada exitosamente' })
-  @ApiResponse({ status: 400, description: 'Datos inválidos o incompletos' })
-  @ApiResponse({ status: 403, description: 'Acceso denegado' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  create(@Body() createAdvisoryDto: CreateAdvisoryDto) {
-    return this.advisoriesService.create(createAdvisoryDto);
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Crear una nueva asesoría' })
+  @ApiCreatedResponse({ description: 'Asesoría creada exitosamente' })
+  @ApiBadRequestResponse({ description: 'Datos inválidos o incompletos' })
+  create(@Body() dto: CreateAdvisoryDto) {
+    return this.advisoriesService.create(dto);
   }
 
   @Get()
-  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
-  @ApiResponse({ status: 200, description: 'Lista de asesorías' })
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Obtener todas las asesorías' })
+  @ApiOkResponse({ description: 'Lista de asesorías' })
   findAll() {
     return this.advisoriesService.findAll();
   }
 
   @Get(':id')
-  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
-  @ApiResponse({ status: 404, description: 'Asesoría no encontrada' })
-  @ApiResponse({ status: 200, description: 'Asesoría encontrada' })
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Obtener asesoría por ID' })
+  @ApiOkResponse({ description: 'Asesoría encontrada' })
+  @ApiNotFoundResponse({ description: 'Asesoría no encontrada' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.advisoriesService.findOne(id);
   }
 
   @Patch(':id')
-  @Roles(UserRole.ADMIN, UserRole.TEACHER)
-  @ApiResponse({
-    status: 200,
-    description: 'Asesoría actualizada exitosamente',
-  })
-  @ApiResponse({ status: 400, description: 'Datos inválidos o incompletos' })
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Actualizar asesoría por ID' })
+  @ApiOkResponse({ description: 'Asesoría actualizada exitosamente' })
+  @ApiNotFoundResponse({ description: 'Asesoría no encontrada' })
   update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateAdvisoryDto: UpdateAdvisoryDto,
+    @Body() dto: UpdateAdvisoryDto,
   ) {
-    return this.advisoriesService.update(id, updateAdvisoryDto);
+    return this.advisoriesService.update(id, dto);
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN, UserRole.TEACHER)
-  @ApiResponse({ status: 200, description: 'Asesoría eliminada' })
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Eliminar asesoría por ID' })
+  @ApiOkResponse({ description: 'Asesoría eliminada exitosamente' })
+  @ApiNotFoundResponse({ description: 'Asesoría no encontrada' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.advisoriesService.remove(id);
   }

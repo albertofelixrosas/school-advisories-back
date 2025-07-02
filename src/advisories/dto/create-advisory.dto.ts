@@ -5,6 +5,8 @@ import {
   IsArray,
   IsInt,
   Matches,
+  IsOptional,
+  IsString,
 } from 'class-validator';
 
 export class CreateAdvisoryDto {
@@ -40,7 +42,7 @@ export class CreateAdvisoryDto {
 
   @ApiProperty({ example: 2, description: 'ID del lugar' })
   @IsInt()
-  location_id: number;
+  venue_id: number;
 
   @ApiProperty({ example: [1, 2, 3], description: 'IDs de los estudiantes' })
   @IsArray()
@@ -52,5 +54,7 @@ export class CreateAdvisoryDto {
     description: 'Descripción detallada de la asesoría',
     required: false,
   })
-  description: string;
+  @IsOptional()
+  @IsString()
+  description?: string;
 }
