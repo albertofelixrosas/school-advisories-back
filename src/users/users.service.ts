@@ -55,4 +55,16 @@ export class UsersService {
     user.role = role;
     return this.usersRepo.save(user);
   }
+
+  async update(id: number, dto: Partial<CreateUserDto>) {
+    const user = await this.usersRepo.findOneBy({ user_id: id });
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    if (dto.password) {
+      dto.password = await bcrypt.hash(dto.password, 10);
+    }
+
+    Object.assign(user, dto);
+    return this.usersRepo.save(user);
+  }
 }

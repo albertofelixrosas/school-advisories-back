@@ -38,8 +38,22 @@ export class VenuesController {
   @ApiCreatedResponse({ description: 'Ubicación creada exitosamente' })
   @ApiBadRequestResponse({ description: 'Datos inválidos o incompletos' })
   create(@Body() dto: CreateVenueDto) {
-    this.validateVenueDto(dto);
-    return this.venuesService.create(dto);
+    try {
+      this.validateVenueDto(dto);
+      return this.venuesService.create(dto);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('Error al crear la ubicación:', error.message);
+      }
+      return {
+        statusCode: 400,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Error al crear la ubicación',
+        error: 'Bad Request',
+      };
+    }
   }
 
   @Get()
@@ -56,7 +70,19 @@ export class VenuesController {
   @ApiOkResponse({ description: 'Ubicación encontrada' })
   @ApiNotFoundResponse({ description: 'Ubicación no encontrada' })
   findOne(@Param('id') id: string) {
-    return this.venuesService.findOne(+id);
+    try {
+      return this.venuesService.findOne(+id);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('Error al obtener la ubicación:', error.message);
+      }
+      return {
+        statusCode: 404,
+        message:
+          error instanceof Error ? error.message : 'Ubicación no encontrada',
+        error: 'Not Found',
+      };
+    }
   }
 
   @Put(':id')
@@ -65,8 +91,22 @@ export class VenuesController {
   @ApiOkResponse({ description: 'Ubicación actualizada correctamente' })
   @ApiNotFoundResponse({ description: 'Ubicación no encontrada' })
   update(@Param('id') id: string, @Body() dto: UpdateVenueDto) {
-    this.validateVenueDto(dto);
-    return this.venuesService.update(+id, dto);
+    try {
+      this.validateVenueDto(dto);
+      return this.venuesService.update(+id, dto);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('Error al actualizar la ubicación:', error.message);
+      }
+      return {
+        statusCode: 400,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Error al actualizar la ubicación',
+        error: 'Bad Request',
+      };
+    }
   }
 
   @Delete(':id')
@@ -75,7 +115,19 @@ export class VenuesController {
   @ApiOkResponse({ description: 'Ubicación eliminada correctamente' })
   @ApiNotFoundResponse({ description: 'Ubicación no encontrada' })
   remove(@Param('id') id: string) {
-    return this.venuesService.remove(+id);
+    try {
+      return this.venuesService.remove(+id);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('Error al eliminar la ubicación:', error.message);
+      }
+      return {
+        statusCode: 404,
+        message:
+          error instanceof Error ? error.message : 'Ubicación no encontrada',
+        error: 'Not Found',
+      };
+    }
   }
 
   validateVenueDto(dto: CreateVenueDto | UpdateVenueDto) {

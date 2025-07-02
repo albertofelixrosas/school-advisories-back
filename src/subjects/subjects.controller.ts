@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { SubjectsService } from './subjects.service';
 import { CreateSubjectDto } from './dto/create-subject.dto';
@@ -38,7 +39,20 @@ export class SubjectsController {
   @ApiCreatedResponse({ description: 'Materia creada exitosamente' })
   @ApiBadRequestResponse({ description: 'Datos inválidos o incompletos' })
   create(@Body() createSubjectDto: CreateSubjectDto) {
-    return this.subjectsService.create(createSubjectDto);
+    try {
+      return this.subjectsService.create(createSubjectDto);
+    } catch (error) {
+      if (error instanceof Error) {
+        // Log the error for debugging purposes
+        console.error('Error al crear la materia:', error.message);
+      }
+      return {
+        statusCode: 400,
+        message:
+          error instanceof Error ? error.message : 'Error al crear la materia',
+        error: 'Bad Request',
+      };
+    }
   }
 
   @Get()
@@ -55,7 +69,27 @@ export class SubjectsController {
   @ApiOkResponse({ description: 'Materia encontrada' })
   @ApiNotFoundResponse({ description: 'Materia no encontrada' })
   findOne(@Param('id') id: string) {
-    return this.subjectsService.findOne(+id);
+    try {
+      return this.subjectsService.findOne(+id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return {
+          statusCode: 404,
+          message: `Materia con ID ${id} no encontrada`,
+          error: 'Not Found',
+        };
+      }
+      // Log other unexpected errors
+      if (error instanceof Error) {
+        // Log the error for debugging purposes
+        console.error('Error al obtener la materia:', error.message);
+      }
+      return {
+        statusCode: 500,
+        message: 'Error interno del servidor al obtener la materia',
+        error: 'Internal Server Error',
+      };
+    }
   }
 
   @Patch(':id')
@@ -64,7 +98,27 @@ export class SubjectsController {
   @ApiOkResponse({ description: 'Materia actualizada exitosamente' })
   @ApiNotFoundResponse({ description: 'Materia no encontrada' })
   update(@Param('id') id: string, @Body() updateSubjectDto: UpdateSubjectDto) {
-    return this.subjectsService.update(+id, updateSubjectDto);
+    try {
+      return this.subjectsService.update(+id, updateSubjectDto);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return {
+          statusCode: 404,
+          message: `Materia con ID ${id} no encontrada`,
+          error: 'Not Found',
+        };
+      }
+      // Log other unexpected errors
+      if (error instanceof Error) {
+        // Log the error for debugging purposes
+        console.error('Error al actualizar la materia:', error.message);
+      }
+      return {
+        statusCode: 500,
+        message: 'Error interno del servidor al actualizar la materia',
+        error: 'Internal Server Error',
+      };
+    }
   }
 
   @Delete(':id')
@@ -73,6 +127,26 @@ export class SubjectsController {
   @ApiOkResponse({ description: 'Materia eliminada exitosamente' })
   @ApiNotFoundResponse({ description: 'Materia no encontrada' })
   remove(@Param('id') id: string) {
-    return this.subjectsService.remove(+id);
+    try {
+      return this.subjectsService.remove(+id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return {
+          statusCode: 404,
+          message: `Materia con ID ${id} no encontrada`,
+          error: 'Not Found',
+        };
+      }
+      // Log other unexpected errors
+      if (error instanceof Error) {
+        // Log the error for debugging purposes
+        console.error('Error al eliminar la materia:', error.message);
+      }
+      return {
+        statusCode: 500,
+        message: 'Error interno del servidor al eliminar la materia',
+        error: 'Internal Server Error',
+      };
+    }
   }
 }
