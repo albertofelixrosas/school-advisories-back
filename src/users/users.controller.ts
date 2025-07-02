@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Put,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import {
@@ -33,7 +34,20 @@ export class UsersController {
   @ApiCreatedResponse({ description: 'Usuario creado exitosamente' })
   @ApiBadRequestResponse({ description: 'Datos inválidos o ya registrados' })
   create(@Body() body: CreateUserDto) {
-    return this.usersService.create(body);
+    try {
+      return this.usersService.create(body);
+    } catch (error) {
+      if (error instanceof Error) {
+        // Log the error for debugging purposes
+        console.error('Error al crear el usuario:', error.message);
+      }
+      return {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message:
+          error instanceof Error ? error.message : 'Error al crear el usuario',
+        error: 'Bad Request',
+      };
+    }
   }
 
   @Get()
@@ -63,6 +77,45 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Actualizar rol del usuario' })
   updateRole(@Param('id') id: number, @Body() dto: UpdateUserRoleDto) {
-    return this.usersService.updateRole(id, dto.role);
+    try {
+      return this.usersService.updateRole(id, dto.role);
+    } catch (error) {
+      if (error instanceof Error) {
+        // Log the error for debugging purposes
+        console.error('Error al actualizar el rol del usuario:', error.message);
+      }
+      return {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message:
+          error instanceof Error ? error.message : 'Error al actualizar el rol',
+        error: 'Bad Request',
+      };
+    }
+  }
+
+  @Put(':id')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Actualizar información del usuario' })
+  @ApiOkResponse({ description: 'Usuario actualizado correctamente' })
+  @ApiBadRequestResponse({
+    description: 'Datos inválidos o usuario no encontrado',
+  })
+  update(@Param('id') id: number, @Body() body: Partial<CreateUserDto>) {
+    try {
+      return this.usersService.update(id, body);
+    } catch (error) {
+      if (error instanceof Error) {
+        // Log the error for debugging purposes
+        console.error('Error al actualizar el usuario:', error.message);
+      }
+      return {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Error al actualizar el usuario',
+        error: 'Bad Request',
+      };
+    }
   }
 }

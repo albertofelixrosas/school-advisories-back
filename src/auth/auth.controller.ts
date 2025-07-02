@@ -41,11 +41,36 @@ export class AuthController {
   })
   @ApiUnauthorizedResponse({ description: 'Credenciales inválidas' })
   async login(@Body() body: LoginDto) {
-    const user = await this.authService.validateUser(
-      body.username,
-      body.password,
-    );
-    return this.authService.login(user);
+    // Envolver en un try-catch para manejar errores de validación
+    try {
+      if (!body.username || !body.password) {
+        throw new UnauthorizedException('Credenciales incompletas');
+      }
+      // Validar el formato del username y password
+      if (
+        typeof body.username !== 'string' ||
+        typeof body.password !== 'string'
+      ) {
+        throw new UnauthorizedException('Credenciales inválidas');
+      }
+      const user = await this.authService.validateUser(
+        body.username,
+        body.password,
+      );
+      return this.authService.login(user);
+    } catch (error) {
+      // Manejar errores específicos de validación
+      if (error instanceof UnauthorizedException) {
+        // Log the error for debugging purposes
+        throw error; // Re-throw the error to be handled by the global exception filter
+      }
+      // Log cualquier otro error inesperado
+      if (error instanceof Error) {
+        // Log the error for debugging purposes
+        console.error('Error al iniciar sesión:', error.message);
+      }
+      throw new UnauthorizedException('Error al iniciar sesión');
+    }
   }
 
   @Post('refresh')

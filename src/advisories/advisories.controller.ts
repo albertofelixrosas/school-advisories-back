@@ -8,6 +8,7 @@ import {
   Delete,
   ParseIntPipe,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { AdvisoriesService } from './advisories.service';
 import { CreateAdvisoryDto } from './dto/create-advisory.dto';
@@ -37,7 +38,20 @@ export class AdvisoriesController {
   @ApiCreatedResponse({ description: 'Asesoría creada exitosamente' })
   @ApiBadRequestResponse({ description: 'Datos inválidos o incompletos' })
   create(@Body() dto: CreateAdvisoryDto) {
-    return this.advisoriesService.create(dto);
+    try {
+      return this.advisoriesService.create(dto);
+    } catch (error) {
+      if (error instanceof Error) {
+        // Log the error for debugging purposes
+        console.error('Error al crear la asesoría:', error.message);
+      }
+      return {
+        statusCode: 400,
+        message:
+          error instanceof Error ? error.message : 'Error al crear la asesoría',
+        error: 'Bad Request',
+      };
+    }
   }
 
   @Get()
@@ -54,7 +68,27 @@ export class AdvisoriesController {
   @ApiOkResponse({ description: 'Asesoría encontrada' })
   @ApiNotFoundResponse({ description: 'Asesoría no encontrada' })
   findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.advisoriesService.findOne(id);
+    try {
+      return this.advisoriesService.findOne(id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return {
+          statusCode: 404,
+          message: error.message,
+          error: 'Not Found',
+        };
+      }
+      // Log other unexpected errors
+      if (error instanceof Error) {
+        // Log the error for debugging purposes
+        console.error('Error al obtener la asesoría:', error.message);
+      }
+      return {
+        statusCode: 500,
+        message: 'Error interno del servidor al obtener la asesoría',
+        error: 'Internal Server Error',
+      };
+    }
   }
 
   @Patch(':id')
@@ -66,7 +100,27 @@ export class AdvisoriesController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateAdvisoryDto,
   ) {
-    return this.advisoriesService.update(id, dto);
+    try {
+      return this.advisoriesService.update(id, dto);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return {
+          statusCode: 404,
+          message: error.message,
+          error: 'Not Found',
+        };
+      }
+      // Log other unexpected errors
+      if (error instanceof Error) {
+        // Log the error for debugging purposes
+        console.error('Error al actualizar la asesoría:', error.message);
+      }
+      return {
+        statusCode: 500,
+        message: 'Error interno del servidor al actualizar la asesoría',
+        error: 'Internal Server Error',
+      };
+    }
   }
 
   @Delete(':id')
@@ -75,6 +129,26 @@ export class AdvisoriesController {
   @ApiOkResponse({ description: 'Asesoría eliminada exitosamente' })
   @ApiNotFoundResponse({ description: 'Asesoría no encontrada' })
   remove(@Param('id', ParseIntPipe) id: number) {
-    return this.advisoriesService.remove(id);
+    try {
+      return this.advisoriesService.remove(id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return {
+          statusCode: 404,
+          message: error.message,
+          error: 'Not Found',
+        };
+      }
+      // Log other unexpected errors
+      if (error instanceof Error) {
+        // Log the error for debugging purposes
+        console.error('Error al eliminar la asesoría:', error.message);
+      }
+      return {
+        statusCode: 500,
+        message: 'Error interno del servidor al eliminar la asesoría',
+        error: 'Internal Server Error',
+      };
+    }
   }
 }
