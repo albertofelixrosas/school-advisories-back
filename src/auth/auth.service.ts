@@ -75,7 +75,7 @@ export class AuthService {
 
       const newAccessToken = this.jwtService.sign(
         { username: user.username, sub: user.user_id },
-        { expiresIn: '15m' },
+        { expiresIn: '45m' },
       );
 
       return { access_token: newAccessToken };

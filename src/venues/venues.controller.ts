@@ -7,6 +7,7 @@ import {
   Put,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { VenuesService } from './venues.service';
 import { CreateVenueDto } from './dto/create-venue.dto';
@@ -25,6 +26,9 @@ import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { UserRole } from 'src/users/user-role.enum';
 import { VenueType } from './venue-type.enum';
+import { PaginatedResult } from 'src/common/interfaces/paginated-result.interface';
+import { VenueDto } from './dto/venue.dto';
+import { VenueQueryDto } from './dto/venue-query.dto';
 
 @ApiTags('Venues')
 @ApiBearerAuth('jwt-auth')
@@ -60,8 +64,8 @@ export class VenuesController {
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Listar todas las ubicaciones' })
   @ApiOkResponse({ description: 'Lista de ubicaciones' })
-  findAll() {
-    return this.venuesService.findAll();
+  findAll(@Query() query: VenueQueryDto): Promise<PaginatedResult<VenueDto>> {
+    return this.venuesService.findAll(query);
   }
 
   @Get(':id')

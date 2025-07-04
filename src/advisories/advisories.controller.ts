@@ -20,6 +20,7 @@ import {
   ApiCreatedResponse,
   ApiBadRequestResponse,
   ApiNotFoundResponse,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
@@ -27,20 +28,29 @@ import { Roles } from 'src/auth/roles.decorator';
 import { UserRole } from 'src/users/user-role.enum';
 
 @ApiTags('Advisories')
+@ApiBearerAuth('jwt-auth')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('advisories')
 export class AdvisoriesController {
   constructor(private readonly advisoriesService: AdvisoriesService) {}
 
   @Post()
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @ApiOperation({ summary: 'Crear una nueva asesoría' })
   @ApiCreatedResponse({ description: 'Asesoría creada exitosamente' })
   @ApiBadRequestResponse({ description: 'Datos inválidos o incompletos' })
   create(@Body() dto: CreateAdvisoryDto) {
     try {
+      console.log('Crear asesoría con datos:', dto);
       return this.advisoriesService.create(dto);
     } catch (error) {
+      if (error instanceof NotFoundException) {
+        return {
+          statusCode: 404,
+          message: error.message,
+          error: 'Not Found',
+        };
+      }
       if (error instanceof Error) {
         // Log the error for debugging purposes
         console.error('Error al crear la asesoría:', error.message);
@@ -55,7 +65,7 @@ export class AdvisoriesController {
   }
 
   @Get()
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
   @ApiOperation({ summary: 'Obtener todas las asesorías' })
   @ApiOkResponse({ description: 'Lista de asesorías' })
   findAll() {
@@ -63,7 +73,7 @@ export class AdvisoriesController {
   }
 
   @Get(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
   @ApiOperation({ summary: 'Obtener asesoría por ID' })
   @ApiOkResponse({ description: 'Asesoría encontrada' })
   @ApiNotFoundResponse({ description: 'Asesoría no encontrada' })
@@ -92,7 +102,7 @@ export class AdvisoriesController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @ApiOperation({ summary: 'Actualizar asesoría por ID' })
   @ApiOkResponse({ description: 'Asesoría actualizada exitosamente' })
   @ApiNotFoundResponse({ description: 'Asesoría no encontrada' })
@@ -124,7 +134,7 @@ export class AdvisoriesController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @ApiOperation({ summary: 'Eliminar asesoría por ID' })
   @ApiOkResponse({ description: 'Asesoría eliminada exitosamente' })
   @ApiNotFoundResponse({ description: 'Asesoría no encontrada' })
