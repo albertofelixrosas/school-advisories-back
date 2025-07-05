@@ -26,12 +26,37 @@ async function bootstrap() {
     }),
   );
 
+  // "ONE_DARK" es el que deje por defecto para la imagen oscura
+  const choosedTheme: SwaggerThemeNameEnum = SwaggerThemeNameEnum.ONE_DARK;
+
+  /*const WHITE_THEMES: SwaggerThemeNameEnum[] = [
+    SwaggerThemeNameEnum.CLASSIC,
+    SwaggerThemeNameEnum.FEELING_BLUE,
+    SwaggerThemeNameEnum.FLATTOP,
+    SwaggerThemeNameEnum.MATERIAL,
+    SwaggerThemeNameEnum.MONOKAI,
+    SwaggerThemeNameEnum.MUTED,
+    SwaggerThemeNameEnum.NEWSPAPER,
+    SwaggerThemeNameEnum.OUTLINE,
+  ];*/
+
+  const DARK_THEMES: SwaggerThemeNameEnum[] = [
+    SwaggerThemeNameEnum.DARK,
+    SwaggerThemeNameEnum.DARK_MONOKAI,
+    SwaggerThemeNameEnum.DRACULA,
+    SwaggerThemeNameEnum.GRUVBOX,
+    SwaggerThemeNameEnum.NORD_DARK,
+    SwaggerThemeNameEnum.ONE_DARK,
+  ];
+
+  const diagramTheme = DARK_THEMES.includes(choosedTheme) ? 'black' : 'white';
+
   const config = new DocumentBuilder()
     .setTitle('School Advisories API')
     .setDescription(
       `<p>Esta es la documentación de la API de asesorías.</p>
   <p><strong>Diagrama Entidad-Relación:</strong></p>
-  <img src="/docs/images/er-diagram-black.svg" alt="ER Diagram" width="100%"/>`,
+  ><img src="/docs/images/er-diagram-${diagramTheme}.svg" alt="ER Diagram" width="100%"/>`,
     )
     .setVersion('1.0')
     .addBearerAuth(
@@ -49,7 +74,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
 
   const theme = new SwaggerTheme();
-  const darkTheme = theme.getBuffer(SwaggerThemeNameEnum.ONE_DARK);
+  const darkTheme = theme.getBuffer(choosedTheme);
 
   SwaggerModule.setup('api', app, document, {
     customCss: darkTheme,
