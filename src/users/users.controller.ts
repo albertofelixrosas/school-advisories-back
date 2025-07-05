@@ -65,12 +65,12 @@ export class UsersController {
     return this.usersService.findByRole(UserRole.STUDENT);
   }
 
-  @Get('teachers')
+  @Get('professors')
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Listar todos los profesores' })
   @ApiOkResponse({ description: 'Lista de usuarios con rol profesor' })
-  findAllTeachers() {
-    return this.usersService.findByRole(UserRole.TEACHER);
+  findAllProfessors() {
+    return this.usersService.findByRole(UserRole.PROFESSOR);
   }
 
   @Patch(':id/role')

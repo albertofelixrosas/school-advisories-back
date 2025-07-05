@@ -29,8 +29,8 @@ export class Advisory {
   end_time: string;
 
   @ManyToOne(() => User, { nullable: false })
-  @JoinColumn({ name: 'teacher_id' })
-  teacher: User;
+  @JoinColumn({ name: 'professor_id' })
+  professor: User;
 
   @ManyToOne(() => Subject, (subject) => subject.advisories, {
     nullable: false,

@@ -8,6 +8,7 @@ import {
   IsInt,
 } from 'class-validator';
 import { UserRole } from '../user-role.enum';
+import { Optional } from '@nestjs/common';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -53,6 +54,14 @@ export class CreateUserDto {
   password: string;
 
   @ApiProperty({
+    example: 'https://firebasestorage.googleapis.com/...',
+    description: 'Contraseña del usuario',
+  })
+  @IsString()
+  @Optional()
+  photo_url: string;
+
+  @ApiProperty({
     example: 2,
     description: 'ID de la escuela a la que pertenece el usuario',
   })
@@ -61,7 +70,7 @@ export class CreateUserDto {
 
   @ApiProperty({
     example: 'student',
-    description: 'Rol del usuario (admin, teacher, student)',
+    description: 'Rol del usuario (admin, professor, student)',
     required: false,
     enum: UserRole,
   })

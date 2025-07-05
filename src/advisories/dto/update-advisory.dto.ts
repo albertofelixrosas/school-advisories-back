@@ -34,7 +34,7 @@ export class UpdateAdvisoryDto {
   @ApiPropertyOptional({ example: 4, description: 'Nuevo ID del maestro' })
   @IsOptional()
   @IsInt()
-  teacher_id?: number;
+  professor_id?: number;
 
   @ApiPropertyOptional({ example: 5, description: 'Nuevo ID de la materia' })
   @IsOptional()
