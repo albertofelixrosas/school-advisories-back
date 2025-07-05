@@ -34,7 +34,7 @@ export class CreateAdvisoryDto {
 
   @ApiProperty({ example: 1, description: 'ID del maestro' })
   @IsInt()
-  teacher_id: number;
+  professor_id: number;
 
   @ApiProperty({ example: 3, description: 'ID de la materia' })
   @IsInt()

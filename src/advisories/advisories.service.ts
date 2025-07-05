@@ -31,17 +31,17 @@ export class AdvisoriesService {
     advisory.end_time = dto.end_time;
     advisory.description = dto.description ?? '';
 
-    const [teacher, subject, venue] = await Promise.all([
+    const [professor, subject, venue] = await Promise.all([
       this.userRepo.findOneBy({
-        user_id: dto.teacher_id,
-        role: UserRole.TEACHER,
+        user_id: dto.professor_id,
+        role: UserRole.PROFESSOR,
       }),
       this.subjectRepo.findOneBy({ subject_id: dto.subject_id }),
       this.venueRepo.findOneBy({ venue_id: dto.venue_id }),
     ]);
 
-    if (!teacher)
-      throw new NotFoundException(`Teacher ID ${dto.teacher_id} not found`);
+    if (!professor)
+      throw new NotFoundException(`Professor ID ${dto.professor_id} not found`);
     if (!subject)
       throw new NotFoundException(`Subject ID ${dto.subject_id} not found`);
     if (!venue)
@@ -50,10 +50,10 @@ export class AdvisoriesService {
     // Validar conflictos
     const existing = await this.advisoryRepo.find({
       where: [
-        { teacher: { user_id: dto.teacher_id }, date: dto.date },
+        { professor: { user_id: dto.professor_id }, date: dto.date },
         { venue: { venue_id: dto.venue_id }, date: dto.date },
       ],
-      relations: ['students', 'teacher', 'venues'],
+      relations: ['students', 'professor', 'venues'],
     });
 
     const studentIds = new Set(dto.students);
@@ -63,9 +63,9 @@ export class AdvisoriesService {
         advisory.end_time > dto.begin_time;
 
       if (overlaps) {
-        if (advisory.teacher.user_id === dto.teacher_id) {
+        if (advisory.professor.user_id === dto.professor_id) {
           throw new NotFoundException(
-            `Teacher ID ${dto.teacher_id} has a conflict`,
+            `Professor ID ${dto.professor_id} has a conflict`,
           );
         }
         if (advisory.venue.venue_id === dto.venue_id) {
@@ -103,7 +103,7 @@ export class AdvisoriesService {
       throw new NotFoundException(`Some student IDs were not found`);
     }
 
-    advisory.teacher = teacher;
+    advisory.professor = professor;
     advisory.subject = subject;
     advisory.venue = venue;
     advisory.students = students;
@@ -113,14 +113,14 @@ export class AdvisoriesService {
 
   findAll() {
     return this.advisoryRepo.find({
-      relations: ['teacher', 'subject', 'venue', 'students'],
+      relations: ['professor', 'subject', 'venue', 'students'],
     });
   }
 
   async findOne(id: number) {
     const advisory = await this.advisoryRepo.findOne({
       where: { advisory_id: id },
-      relations: ['teacher', 'subject', 'venue', 'students'],
+      relations: ['professor', 'subject', 'venue', 'students'],
     });
 
     if (!advisory) throw new NotFoundException(`Advisory ID ${id} not found`);
@@ -130,7 +130,7 @@ export class AdvisoriesService {
   async update(id: number, dto: UpdateAdvisoryDto) {
     const advisory = await this.advisoryRepo.findOne({
       where: { advisory_id: id },
-      relations: ['students', 'teacher', 'subject', 'venue'],
+      relations: ['students', 'professor', 'subject', 'venue'],
     });
 
     if (!advisory) {
@@ -143,18 +143,20 @@ export class AdvisoriesService {
     advisory.end_time = dto.end_time ?? advisory.end_time;
     advisory.description = dto.description ?? advisory.description;
 
-    // ✅ Validar y actualizar teacher
-    if (dto.teacher_id !== undefined) {
-      const teacher = await this.userRepo.findOneBy({
-        user_id: dto.teacher_id,
-        role: UserRole.TEACHER,
+    // ✅ Validar y actualizar professor
+    if (dto.professor_id !== undefined) {
+      const professor = await this.userRepo.findOneBy({
+        user_id: dto.professor_id,
+        role: UserRole.PROFESSOR,
       });
 
-      if (!teacher) {
-        throw new NotFoundException(`Teacher ID ${dto.teacher_id} not found`);
+      if (!professor) {
+        throw new NotFoundException(
+          `Professor ID ${dto.professor_id} not found`,
+        );
       }
 
-      advisory.teacher = teacher;
+      advisory.professor = professor;
     }
 
     // ✅ Validar y actualizar subject

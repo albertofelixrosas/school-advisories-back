@@ -35,7 +35,7 @@ export class AdvisoriesController {
   constructor(private readonly advisoriesService: AdvisoriesService) {}
 
   @Post()
-  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
   @ApiOperation({ summary: 'Crear una nueva asesoría' })
   @ApiCreatedResponse({ description: 'Asesoría creada exitosamente' })
   @ApiBadRequestResponse({ description: 'Datos inválidos o incompletos' })
@@ -65,7 +65,7 @@ export class AdvisoriesController {
   }
 
   @Get()
-  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT)
   @ApiOperation({ summary: 'Obtener todas las asesorías' })
   @ApiOkResponse({ description: 'Lista de asesorías' })
   findAll() {
@@ -73,7 +73,7 @@ export class AdvisoriesController {
   }
 
   @Get(':id')
-  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT)
   @ApiOperation({ summary: 'Obtener asesoría por ID' })
   @ApiOkResponse({ description: 'Asesoría encontrada' })
   @ApiNotFoundResponse({ description: 'Asesoría no encontrada' })
@@ -102,7 +102,7 @@ export class AdvisoriesController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
   @ApiOperation({ summary: 'Actualizar asesoría por ID' })
   @ApiOkResponse({ description: 'Asesoría actualizada exitosamente' })
   @ApiNotFoundResponse({ description: 'Asesoría no encontrada' })
@@ -134,7 +134,7 @@ export class AdvisoriesController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
   @ApiOperation({ summary: 'Eliminar asesoría por ID' })
   @ApiOkResponse({ description: 'Asesoría eliminada exitosamente' })
   @ApiNotFoundResponse({ description: 'Asesoría no encontrada' })
