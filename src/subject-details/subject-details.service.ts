@@ -23,7 +23,7 @@ export class SubjectDetailsService {
 
   findOne(id: number) {
     return this.detailsRepo.findOne({
-      where: { id },
+      where: { subject_detail_id: id },
       relations: ['subject', 'schedules'],
     });
   }

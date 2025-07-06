@@ -1,26 +1,29 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { AdvisorySchedule } from './entities/advisory-schedule.entity';
 import { CreateAdvisoryScheduleDto } from './dto/create-advisory-schedule.dto';
-import { UpdateAdvisoryScheduleDto } from './dto/update-advisory-schedule.dto';
 
 @Injectable()
 export class AdvisorySchedulesService {
-  create(createAdvisoryScheduleDto: CreateAdvisoryScheduleDto) {
-    return 'This action adds a new advisorySchedule';
+  constructor(
+    @InjectRepository(AdvisorySchedule)
+    private readonly schedulesRepo: Repository<AdvisorySchedule>,
+  ) {}
+
+  async create(advisoryId: number, dto: CreateAdvisoryScheduleDto) {
+    const schedule = this.schedulesRepo.create({
+      ...dto,
+      advisory_id: advisoryId,
+    });
+    return this.schedulesRepo.save(schedule);
   }
 
-  findAll() {
-    return `This action returns all advisorySchedules`;
+  findAllByAdvisory(advisoryId: number) {
+    return this.schedulesRepo.find({ where: { advisory_id: advisoryId } });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} advisorySchedule`;
-  }
-
-  update(id: number, updateAdvisoryScheduleDto: UpdateAdvisoryScheduleDto) {
-    return `This action updates a #${id} advisorySchedule`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} advisorySchedule`;
+  async remove(id: number) {
+    return this.schedulesRepo.delete(id);
   }
 }

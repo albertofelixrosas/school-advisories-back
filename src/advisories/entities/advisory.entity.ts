@@ -6,10 +6,12 @@ import {
   ManyToMany,
   JoinTable,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { Subject } from 'src/subjects/entities/subject.entity';
 import { Venue } from 'src/venues/entities/venue.entity';
 import { User } from 'src/users/entities/user.entity';
+import { AdvisorySchedule } from 'src/advisory-schedules/entities/advisory-schedule.entity';
 
 @Entity('advisories')
 export class Advisory {
@@ -49,4 +51,9 @@ export class Advisory {
     inverseJoinColumn: { name: 'student_id', referencedColumnName: 'user_id' },
   })
   students: User[];
+
+  @OneToMany(() => AdvisorySchedule, (schedule) => schedule.advisory, {
+    cascade: true,
+  })
+  schedules: AdvisorySchedule[];
 }

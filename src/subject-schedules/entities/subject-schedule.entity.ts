@@ -11,7 +11,7 @@ import { WeekDay } from '../../common/week-day.enum';
 @Entity('subject_schedules')
 export class SubjectSchedule {
   @PrimaryGeneratedColumn()
-  id: number;
+  subject_schedule_id: number;
 
   @Column({ type: 'enum', enum: WeekDay })
   day: WeekDay;
