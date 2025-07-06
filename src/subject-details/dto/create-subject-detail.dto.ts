@@ -17,8 +17,8 @@ export class CreateSubjectDetailDto {
 
   @ApiProperty({
     example: [
-      { day: 'MONDAY', startTime: '08:00', endTime: '10:00' },
-      { day: 'WEDNESDAY', startTime: '08:00', endTime: '10:00' },
+      { day: 'MONDAY', start_time: '08:00', end_time: '10:00' },
+      { day: 'WEDNESDAY', start_time: '08:00', end_time: '10:00' },
     ],
     description: 'Optional schedules for the subject',
     required: false,

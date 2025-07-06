@@ -9,9 +9,9 @@ export class CreateSubjectScheduleDto {
 
   @ApiProperty({ example: '08:00' })
   @IsString()
-  startTime: string;
+  start_time: string;
 
   @ApiProperty({ example: '10:00' })
   @IsString()
-  endTime: string;
+  end_time: string;
 }

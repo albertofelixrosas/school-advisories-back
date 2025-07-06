@@ -9,6 +9,8 @@ import { validationSchema } from './env.validation';
 
 import { Subject } from './subjects/entities/subject.entity';
 import { Advisory } from './advisories/entities/advisory.entity';
+import { AdvisoryDate } from './advisory-dates/entities/advisory-date.entity';
+import { AdvisorySchedule } from './advisory-schedules/entities/advisory-schedule.entity';
 import { Venue } from './venues/entities/venue.entity';
 import { User } from './users/entities/user.entity';
 import { RefreshToken } from './auth/entities/refresh-token.entity';
@@ -17,14 +19,13 @@ import { SubjectSchedule } from './subject-schedules/entities/subject-schedule.e
 
 import { SubjectDetailsModule } from './subject-details/subject-details.module';
 import { SubjectSchedulesModule } from './subject-schedules/subject-schedules.module';
+import { AdvisoriesModule } from './advisories/advisories.module';
 import { AdvisoryDatesModule } from './advisory-dates/advisory-dates.module';
 import { AdvisorySchedulesModule } from './advisory-schedules/advisory-schedules.module';
-import { AdvisoriesModule } from './advisories/advisories.module';
 import { VenuesModule } from './venues/venues.module';
 import { SubjectsModule } from './subjects/subjects.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { AdvisoryDate } from './advisory-dates/entities/advisory-date.entity';
 
 @Module({
   imports: [
@@ -59,20 +60,21 @@ import { AdvisoryDate } from './advisory-dates/entities/advisory-date.entity';
           SubjectDetails,
           SubjectSchedule,
           AdvisoryDate,
+          AdvisorySchedule,
         ],
         synchronize: true, // solo para desarrollo
       }),
     }),
 
     AdvisoriesModule,
+    AdvisoryDatesModule,
+    AdvisorySchedulesModule,
     VenuesModule,
     SubjectsModule,
     AuthModule,
     UsersModule,
     SubjectDetailsModule,
     SubjectSchedulesModule,
-    AdvisoryDatesModule,
-    AdvisorySchedulesModule,
   ],
 })
 export class AppModule {}

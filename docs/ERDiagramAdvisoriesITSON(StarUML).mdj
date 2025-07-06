@@ -613,6 +613,30 @@
 												},
 												{
 													"_type": "ERDColumnView",
+													"_id": "AAAAAAGX271tuu/czJs=",
+													"_parent": {
+														"$ref": "AAAAAAGXm4hkjKeWQOs="
+													},
+													"model": {
+														"$ref": "AAAAAAGX271tke/Zb4E="
+													},
+													"visible": true,
+													"enabled": true,
+													"lineColor": "#e879f9",
+													"fillColor": "#272c35",
+													"fontColor": "#b3bbc9",
+													"font": "Roboto;13;0",
+													"showShadow": true,
+													"containerChangeable": false,
+													"containerExtending": false,
+													"left": 125,
+													"top": 374,
+													"width": 188.13671875,
+													"height": 13,
+													"autoResize": false
+												},
+												{
+													"_type": "ERDColumnView",
 													"_id": "AAAAAAGXyaVFMcK3O7I=",
 													"_parent": {
 														"$ref": "AAAAAAGXm4hkjKeWQOs="
@@ -630,7 +654,7 @@
 													"containerChangeable": false,
 													"containerExtending": false,
 													"left": 125,
-													"top": 374,
+													"top": 389,
 													"width": 188.13671875,
 													"height": 13,
 													"autoResize": false
@@ -648,7 +672,7 @@
 											"left": 120,
 											"top": 279,
 											"width": 198.13671875,
-											"height": 113,
+											"height": 128,
 											"autoResize": false
 										}
 									],
@@ -664,7 +688,7 @@
 									"left": 120,
 									"top": 256,
 									"width": 198.13671875,
-									"height": 136,
+									"height": 151,
 									"autoResize": true,
 									"nameLabel": {
 										"$ref": "AAAAAAGXm4hki6eV/sE="
@@ -1844,7 +1868,7 @@
 											"showShadow": true,
 											"containerChangeable": false,
 											"containerExtending": false,
-											"left": 288,
+											"left": 292,
 											"top": 104,
 											"width": 131.36474609375,
 											"height": 13,
@@ -1907,7 +1931,7 @@
 											"showShadow": true,
 											"containerChangeable": false,
 											"containerExtending": false,
-											"left": 231,
+											"left": 235,
 											"top": 224,
 											"width": 0,
 											"height": 13,
@@ -1940,7 +1964,7 @@
 										"$ref": "AAAAAAGX16y31PRrRIg="
 									},
 									"lineStyle": 2,
-									"points": "448:136;216:136;216:256",
+									"points": "448:136;220:136;220:256",
 									"nameLabel": {
 										"$ref": "AAAAAAGX19Db+fUaitY="
 									},
@@ -2108,7 +2132,7 @@
 											"showShadow": true,
 											"containerChangeable": false,
 											"containerExtending": false,
-											"left": 310,
+											"left": 322,
 											"top": 446,
 											"width": 122.560546875,
 											"height": 13,
@@ -2171,8 +2195,8 @@
 											"showShadow": true,
 											"containerChangeable": false,
 											"containerExtending": false,
-											"left": 193,
-											"top": 410,
+											"left": 205,
+											"top": 425,
 											"width": 0,
 											"height": 13,
 											"autoResize": false,
@@ -2204,7 +2228,7 @@
 										"$ref": "AAAAAAGX14ymifPRjog="
 									},
 									"lineStyle": 2,
-									"points": "464:480;208:480;208:391",
+									"points": "464:480;220:480;220:406",
 									"nameLabel": {
 										"$ref": "AAAAAAGX1/2h3vVnjZ4="
 									},
@@ -2393,7 +2417,7 @@
 										"$ref": "AAAAAAGX2FYVzPaOeWo="
 									},
 									"lineStyle": 1,
-									"points": "105:324;119:324"
+									"points": "105:326;119:327"
 								},
 								{
 									"_type": "ERDEntityView",
@@ -3535,8 +3559,9 @@
 									"_parent": {
 										"$ref": "AAAAAAGXm4glE6dzTvQ="
 									},
-									"name": "teacher_id",
+									"name": "professor_id",
 									"type": "INTEGER",
+									"length": 0,
 									"primaryKey": false,
 									"foreignKey": true,
 									"referenceTo": {
@@ -3759,6 +3784,20 @@
 									"primaryKey": false,
 									"foreignKey": false,
 									"nullable": true,
+									"unique": false
+								},
+								{
+									"_type": "ERDColumn",
+									"_id": "AAAAAAGX271tke/Zb4E=",
+									"_parent": {
+										"$ref": "AAAAAAGXm4hki6eSUyI="
+									},
+									"name": "image_url",
+									"type": "VARCHAR",
+									"length": 0,
+									"primaryKey": false,
+									"foreignKey": false,
+									"nullable": false,
 									"unique": false
 								},
 								{
@@ -4110,7 +4149,7 @@
 									"_parent": {
 										"$ref": "AAAAAAGX14ymiPPPPq0="
 									},
-									"name": "user_id",
+									"name": "professor_id",
 									"type": "INTEGER",
 									"length": 0,
 									"primaryKey": false,

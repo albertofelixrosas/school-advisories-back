@@ -13,7 +13,7 @@ import { User } from '../../users/entities/user.entity';
 @Entity('subject_details')
 export class SubjectDetails {
   @PrimaryGeneratedColumn()
-  id: number;
+  subject_detail_id: number;
 
   @Column()
   subject_id: number;
