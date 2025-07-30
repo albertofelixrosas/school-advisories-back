@@ -50,9 +50,7 @@ export class User {
   subject_details: SubjectDetails[];
 
   // Many user students can have many advisory dates (Many to Many relationship)
-  @ManyToMany(() => AdvisoryDate, (advisoryDate) => advisoryDate.students, {
-    cascade: true,
-  })
+  @ManyToMany(() => AdvisoryDate, (advisoryDate) => advisoryDate.students)
   advisory_dates: AdvisoryDate[];
 
   @OneToMany(() => AdvisoryAttendance, (attendance) => attendance.student)

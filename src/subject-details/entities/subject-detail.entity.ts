@@ -30,13 +30,9 @@ export class SubjectDetails {
   @JoinColumn({ name: 'professor_id' })
   professor: User;
 
-  @OneToMany(() => SubjectSchedule, (schedule) => schedule.subject_details, {
-    cascade: true,
-  })
+  @OneToMany(() => SubjectSchedule, (schedule) => schedule.subject_details)
   schedules: SubjectSchedule[];
 
-  @OneToMany(() => Advisory, (advisory) => advisory.subject_detail, {
-    cascade: true,
-  })
+  @OneToMany(() => Advisory, (advisory) => advisory.subject_detail)
   advisories: Advisory[];
 }

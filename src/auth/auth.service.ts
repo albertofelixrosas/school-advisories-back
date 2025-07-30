@@ -33,7 +33,7 @@ export class AuthService {
       role: user.role,
     };
 
-    const access_token = this.jwtService.sign(payload, { expiresIn: '15m' });
+    const access_token = this.jwtService.sign(payload, { expiresIn: '60m' });
     const refresh_token = this.jwtService.sign(payload, { expiresIn: '7d' });
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);

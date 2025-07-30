@@ -25,29 +25,20 @@ export class Advisory {
   @Column()
   max_students: number;
 
-  @ManyToOne(() => User, (user) => user.advisory_dates, {
-    cascade: true,
-  })
+  @ManyToOne(() => User, (user) => user.advisory_dates)
   @JoinColumn({ name: 'professor_id' })
   professor: User;
 
   @ManyToOne(
     () => SubjectDetails,
     (subjectDetails) => subjectDetails.advisories,
-    {
-      cascade: true,
-    },
   )
   @JoinColumn({ name: 'subject_detail_id' })
   subject_detail: SubjectDetails;
 
-  @OneToMany(() => AdvisorySchedule, (schedule) => schedule.advisory, {
-    cascade: true,
-  })
+  @OneToMany(() => AdvisorySchedule, (schedule) => schedule.advisory)
   schedules: AdvisorySchedule[];
 
-  @OneToMany(() => AdvisoryDate, (advisoryDate) => advisoryDate.advisory, {
-    cascade: true,
-  })
+  @OneToMany(() => AdvisoryDate, (advisoryDate) => advisoryDate.advisory)
   advisory_dates: AdvisoryDate[];
 }
