@@ -3,57 +3,51 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
-  ManyToMany,
-  JoinTable,
   JoinColumn,
   OneToMany,
 } from 'typeorm';
-import { Subject } from 'src/subjects/entities/subject.entity';
-import { Venue } from 'src/venues/entities/venue.entity';
 import { User } from 'src/users/entities/user.entity';
 import { AdvisorySchedule } from 'src/advisory-schedules/entities/advisory-schedule.entity';
+import { SubjectDetails } from 'src/subject-details/entities/subject-detail.entity';
+import { AdvisoryDate } from 'src/advisory-dates/entities/advisory-date.entity';
 
 @Entity('advisories')
 export class Advisory {
   @PrimaryGeneratedColumn()
   advisory_id: number;
 
-  @Column({ type: 'text', nullable: false })
-  description: string;
+  @Column()
+  professor_id: number;
 
-  @Column({ type: 'date', nullable: false })
-  date: string;
+  @Column()
+  subject_detail_id: number;
 
-  @Column({ type: 'time', nullable: false })
-  begin_time: string;
+  @Column()
+  max_students: number;
 
-  @Column({ type: 'time', nullable: false })
-  end_time: string;
-
-  @ManyToOne(() => User, { nullable: false })
+  @ManyToOne(() => User, (user) => user.advisory_dates, {
+    cascade: true,
+  })
   @JoinColumn({ name: 'professor_id' })
   professor: User;
 
-  @ManyToOne(() => Subject, (subject) => subject.advisories, {
-    nullable: false,
-  })
-  subject: Subject;
-
-  @ManyToOne(() => Venue, (venue) => venue.advisories, {
-    nullable: false,
-  })
-  venue: Venue;
-
-  @ManyToMany(() => User)
-  @JoinTable({
-    name: 'advisory_students',
-    joinColumn: { name: 'advisory_id', referencedColumnName: 'advisory_id' },
-    inverseJoinColumn: { name: 'student_id', referencedColumnName: 'user_id' },
-  })
-  students: User[];
+  @ManyToOne(
+    () => SubjectDetails,
+    (subjectDetails) => subjectDetails.advisories,
+    {
+      cascade: true,
+    },
+  )
+  @JoinColumn({ name: 'subject_detail_id' })
+  subject_detail: SubjectDetails;
 
   @OneToMany(() => AdvisorySchedule, (schedule) => schedule.advisory, {
     cascade: true,
   })
   schedules: AdvisorySchedule[];
+
+  @OneToMany(() => AdvisoryDate, (advisoryDate) => advisoryDate.advisory, {
+    cascade: true,
+  })
+  advisory_dates: AdvisoryDate[];
 }

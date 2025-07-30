@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { VenueType } from '../venue-type.enum';
-import { Advisory } from 'src/advisories/entities/advisory.entity';
+import { AdvisoryDate } from 'src/advisory-dates/entities/advisory-date.entity';
 
 @Entity('venues')
 export class Venue {
@@ -26,6 +26,6 @@ export class Venue {
   @Column({ nullable: true })
   floor?: string; // si aplica para oficinas o aulas, igual que building
 
-  @OneToMany(() => Advisory, (advisory) => advisory.venue)
-  advisories: Advisory[];
+  @OneToMany(() => AdvisoryDate, (advisorydate) => advisorydate.venue)
+  advisory_dates: AdvisoryDate[];
 }

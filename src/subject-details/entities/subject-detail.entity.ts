@@ -9,6 +9,7 @@ import {
 import { Subject } from '../../subjects/entities/subject.entity';
 import { SubjectSchedule } from '../../subject-schedules/entities/subject-schedule.entity';
 import { User } from '../../users/entities/user.entity';
+import { Advisory } from 'src/advisories/entities/advisory.entity';
 
 @Entity('subject_details')
 export class SubjectDetails {
@@ -33,4 +34,9 @@ export class SubjectDetails {
     cascade: true,
   })
   schedules: SubjectSchedule[];
+
+  @OneToMany(() => Advisory, (advisory) => advisory.subject_detail, {
+    cascade: true,
+  })
+  advisories: Advisory[];
 }

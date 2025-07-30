@@ -1,60 +1,65 @@
-import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsDateString,
-  IsNotEmpty,
-  IsArray,
   IsInt,
-  Matches,
-  IsOptional,
+  IsArray,
+  ValidateNested,
+  IsEnum,
   IsString,
+  Matches,
+  Min,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
+import { WeekDay } from 'src/common/week-day.enum';
 
-export class CreateAdvisoryDto {
-  @ApiProperty({ example: '2025-06-25', description: 'Fecha de la asesoría' })
-  @IsNotEmpty()
-  @IsDateString()
-  date: string;
+class ScheduleDto {
+  @ApiProperty({
+    enum: WeekDay,
+    description: 'Día de la semana (por ejemplo: MONDAY, TUESDAY...)',
+  })
+  @IsEnum(WeekDay)
+  day: WeekDay;
 
   @ApiProperty({
-    example: '10:00',
-    description: 'Hora de inicio (formato HH:mm)',
+    example: '08:30',
+    description: 'Hora de inicio en formato HH:mm (24h)',
   })
-  @IsNotEmpty()
-  @Matches(/^([0-1]\d|2[0-3]):([0-5]\d)$/, {
-    message: 'Formato de hora inválido',
+  @IsString()
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, {
+    message: 'begin_time must be in HH:mm format',
   })
   begin_time: string;
 
-  @ApiProperty({ example: '11:30', description: 'Hora de fin (formato HH:mm)' })
-  @IsNotEmpty()
-  @Matches(/^([0-1]\d|2[0-3]):([0-5]\d)$/, {
-    message: 'Formato de hora inválido',
+  @ApiProperty({
+    example: '10:00',
+    description: 'Hora de finalización en formato HH:mm (24h)',
+  })
+  @IsString()
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, {
+    message: 'end_time must be in HH:mm format',
   })
   end_time: string;
+}
 
-  @ApiProperty({ example: 1, description: 'ID del maestro' })
+export class CreateAdvisoryDto {
+  @ApiProperty({ example: 1, description: 'ID del profesor' })
   @IsInt()
   professor_id: number;
 
-  @ApiProperty({ example: 3, description: 'ID de la materia' })
+  @ApiProperty({ example: 42, description: 'ID del detalle de materia' })
   @IsInt()
-  subject_id: number;
+  subject_detail_id: number;
 
-  @ApiProperty({ example: 2, description: 'ID del lugar' })
+  @ApiProperty({ example: 10, description: 'Máximo de estudiantes permitidos' })
   @IsInt()
-  venue_id: number;
-
-  @ApiProperty({ example: [1, 2, 3], description: 'IDs de los estudiantes' })
-  @IsArray()
-  @IsInt({ each: true })
-  students: number[];
+  @Min(1)
+  max_students: number;
 
   @ApiProperty({
-    example: 'Asesoría sobre el tema de álgebra lineal',
-    description: 'Descripción detallada de la asesoría',
-    required: false,
+    type: [ScheduleDto],
+    description: 'Arreglo de horarios disponibles',
   })
-  @IsOptional()
-  @IsString()
-  description?: string;
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ScheduleDto)
+  schedules: ScheduleDto[];
 }

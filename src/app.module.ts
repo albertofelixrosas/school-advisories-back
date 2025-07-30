@@ -26,6 +26,8 @@ import { VenuesModule } from './venues/venues.module';
 import { SubjectsModule } from './subjects/subjects.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { AdvisoryAttendanceModule } from './advisory-attendance/advisory-attendance.module';
+import { AdvisoryAttendance } from './advisory-attendance/entities/advisory-attendance.entity';
 
 @Module({
   imports: [
@@ -61,6 +63,7 @@ import { UsersModule } from './users/users.module';
           SubjectSchedule,
           AdvisoryDate,
           AdvisorySchedule,
+          AdvisoryAttendance,
         ],
         synchronize: true, // solo para desarrollo
       }),
@@ -75,6 +78,7 @@ import { UsersModule } from './users/users.module';
     UsersModule,
     SubjectDetailsModule,
     SubjectSchedulesModule,
+    AdvisoryAttendanceModule,
   ],
 })
 export class AppModule {}
