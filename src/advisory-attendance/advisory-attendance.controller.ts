@@ -10,7 +10,9 @@ import {
 import { AdvisoryAttendanceService } from './advisory-attendance.service';
 import { CreateAdvisoryAttendanceDto } from './dto/create-advisory-attendance.dto';
 import { UpdateAdvisoryAttendanceDto } from './dto/update-advisory-attendance.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Advisory Attendance')
 @Controller('advisory-attendance')
 export class AdvisoryAttendanceController {
   constructor(

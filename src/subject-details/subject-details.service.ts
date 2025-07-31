@@ -59,11 +59,21 @@ export class SubjectDetailsService {
     }
 
     const detail = this.detailsRepo.create({
-      ...dto,
       subject,
       professor,
-      schedules: dto.schedules,
     });
+
+    const savedDetail = await this.detailsRepo.save(detail);
+
+    // Crear horarios manualmente asignando la relación
+    const schedules = dto.schedules.map((s) => {
+      return this.subjectScheduleRepo.create({
+        ...s,
+        subject_details: savedDetail,
+      });
+    });
+
+    await this.subjectScheduleRepo.save(schedules);
 
     return this.detailsRepo.save(detail);
   }
@@ -75,13 +85,66 @@ export class SubjectDetailsService {
   findOne(id: number) {
     return this.detailsRepo.findOne({
       where: { subject_detail_id: id },
-      relations: ['subject', 'schedules', 'users'],
+      relations: ['subject', 'schedules', 'professor'],
     });
   }
 
   async update(id: number, dto: UpdateSubjectDetailDto) {
-    await this.detailsRepo.update(id, dto);
-    return this.findOne(id);
+    // Primero obtener el detalle existente, incluyendo sus horarios
+    const detail = await this.detailsRepo.findOne({
+      where: { subject_detail_id: id },
+      relations: ['schedules'],
+    });
+
+    if (!detail) {
+      throw new NotFoundException(`SubjectDetail with id ${id} not found`);
+    }
+
+    // Actualizar campos simples
+    if (dto.professor_id) {
+      const professor = await this.userRepo.findOne({
+        where: [{ user_id: dto.professor_id }, { role: UserRole.PROFESSOR }],
+      });
+      if (!professor) {
+        throw new NotFoundException(
+          `Professor with id ${dto.professor_id} not found`,
+        );
+      }
+      detail.professor = professor;
+    }
+
+    if (dto.subject_id) {
+      const subject = await this.subjectRepo.findOne({
+        where: { subject_id: dto.subject_id },
+      });
+      if (!subject) {
+        throw new NotFoundException(
+          `Subject with id ${dto.subject_id} not found`,
+        );
+      }
+      detail.subject = subject;
+    }
+
+    // Si se mandan horarios, reemplazar los anteriores
+    if (dto.schedules) {
+      detail.schedules = [];
+
+      await this.subjectScheduleRepo.delete({
+        subject_details_id: detail.subject_detail_id,
+      }); // eliminar los horarios anteriores
+
+      await this.detailsRepo.save(detail); // importante para eliminar los anteriores
+
+      // Crear los nuevos schedules y asignarlos
+      detail.schedules = dto.schedules.map((s) =>
+        this.subjectScheduleRepo.create({
+          ...s,
+          subject_details_id: detail.subject_detail_id, // Asegurar que se asigne el ID correcto
+        }),
+      );
+    }
+
+    return this.detailsRepo.save(detail);
   }
 
   remove(id: number) {

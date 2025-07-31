@@ -10,7 +10,9 @@ import {
 import { AdvisoryDatesService } from './advisory-dates.service';
 import { CreateAdvisoryDateDto } from './dto/create-advisory-date.dto';
 import { UpdateAdvisoryDateDto } from './dto/update-advisory-date.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Advisory Dates')
 @Controller('advisory-dates')
 export class AdvisoryDatesController {
   constructor(private readonly advisoryDatesService: AdvisoryDatesService) {}
