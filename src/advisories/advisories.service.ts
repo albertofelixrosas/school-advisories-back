@@ -8,6 +8,7 @@ import { UpdateAdvisoryDto } from './dto/update-advisory.dto';
 import { SubjectDetails } from 'src/subject-details/entities/subject-detail.entity';
 import { AdvisorySchedule } from 'src/advisory-schedules/entities/advisory-schedule.entity';
 import { UserRole } from 'src/users/user-role.enum';
+import { AdvisoryResponseDto } from './dto/advisory-response.dto';
 
 @Injectable()
 export class AdvisoriesService {
@@ -21,6 +22,34 @@ export class AdvisoriesService {
     @InjectRepository(AdvisorySchedule)
     private readonly advisoryScheduleRepo: Repository<AdvisorySchedule>,
   ) {}
+
+  private generateAdvisoryResponse(advisory: Advisory): AdvisoryResponseDto {
+    const result: AdvisoryResponseDto = {
+      advisory_id: advisory.advisory_id,
+      max_students: advisory.max_students,
+      professor: {
+        name: advisory.professor.name,
+        last_name: advisory.professor.last_name,
+        email: advisory.professor.email,
+        photo_url: advisory.professor.photo_url,
+      },
+      subject_detail: {
+        subject_detail_id: advisory.subject_detail.subject_detail_id,
+        schedules: advisory.subject_detail.schedules.map((s) => ({
+          day: s.day,
+          start_time: s.start_time,
+          end_time: s.end_time,
+        })),
+      },
+      schedules: advisory.schedules.map((schedule) => ({
+        advisory_schedule_id: schedule.advisory_schedule_id,
+        day: schedule.day,
+        begin_time: schedule.begin_time,
+        end_time: schedule.end_time,
+      })),
+    };
+    return result;
+  }
 
   async create(dto: CreateAdvisoryDto) {
     const professor = await this.userRepo.findOne({
@@ -62,20 +91,36 @@ export class AdvisoriesService {
 
     await this.advisoryScheduleRepo.save(schedules);
 
-    return this.advisoryRepo.save({ ...savedAvisory, schedules });
+    const advisoryWithSchedules = await this.advisoryRepo.save({
+      ...savedAvisory,
+      schedules,
+    });
+
+    return this.generateAdvisoryResponse(advisoryWithSchedules);
   }
 
-  async findOne(id: number) {
-    return this.advisoryRepo.findOne({
+  async findOne(id: number): Promise<AdvisoryResponseDto> {
+    const advisory = await this.advisoryRepo.findOne({
       where: { advisory_id: id },
-      relations: ['professor', 'subject_detail', 'schedules'],
+      relations: ['professor.user', 'subject_detail.schedules', 'schedules'],
     });
+    if (!advisory) {
+      throw new NotFoundException(`Advisory ID ${id} not found`);
+    }
+
+    const result = this.generateAdvisoryResponse(advisory);
+    return result;
   }
 
   async findAll() {
-    return this.advisoryRepo.find({
+    const advisories = await this.advisoryRepo.find({
       relations: ['professor', 'subject_detail', 'schedules'],
     });
+    const results: AdvisoryResponseDto[] = advisories.map((advisory) =>
+      this.generateAdvisoryResponse(advisory),
+    );
+
+    return results;
   }
 
   async update(id: number, dto: UpdateAdvisoryDto) {
@@ -113,25 +158,30 @@ export class AdvisoriesService {
     }
 
     if (dto.schedules) {
-      // Clear existing schedules
-      advisory.schedules = [];
-
-      // Remove existing schedules from the database
-      await this.advisoryScheduleRepo.remove(advisory.schedules);
+      // Fetch and remove existing schedules from the database
+      const existingSchedules = await this.advisoryScheduleRepo.find({
+        where: { advisory: { advisory_id: id } },
+      });
+      if (existingSchedules.length > 0) {
+        await this.advisoryScheduleRepo.remove(existingSchedules);
+      }
 
       // Add new schedules
+      advisory.schedules = [];
       for (const schedule of dto.schedules) {
         const advisorySchedule = this.advisoryScheduleRepo.create(schedule);
-        advisorySchedule.advisory = advisory; // Set the relationship
         advisory.schedules.push(advisorySchedule);
       }
     }
 
-    return this.advisoryRepo.save(advisory);
+    // Save the updated advisory entity, not the DTO
+    return this.advisoryRepo.save({ advisory_id: id, ...dto });
   }
 
   async remove(id: number) {
-    const advisory = await this.findOne(id);
+    const advisory = await this.advisoryRepo.findOne({
+      where: { advisory_id: id },
+    });
     if (!advisory) {
       throw new NotFoundException(`Advisory ID ${id} not found`);
     }
