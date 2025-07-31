@@ -133,8 +133,6 @@ export class SubjectDetailsService {
         subject_details_id: detail.subject_detail_id,
       }); // eliminar los horarios anteriores
 
-      await this.detailsRepo.save(detail); // importante para eliminar los anteriores
-
       // Crear los nuevos schedules y asignarlos
       detail.schedules = dto.schedules.map((s) =>
         this.subjectScheduleRepo.create({
