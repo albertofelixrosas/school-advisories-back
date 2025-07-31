@@ -30,7 +30,7 @@ export class AdvisoriesService {
       throw new NotFoundException(`Professor ID ${dto.professor_id} not found`);
     }
     const subjectDetail = await this.subjectDetailRepo.findOne({
-      where: { subject_id: dto.subject_detail_id },
+      where: { subject_detail_id: dto.subject_detail_id },
     });
     if (!subjectDetail) {
       throw new NotFoundException(
@@ -43,16 +43,26 @@ export class AdvisoriesService {
       professor,
       subject_detail: subjectDetail,
     });
-    // Validate and set schedules if provided
-    if (dto.schedules && Array.isArray(dto.schedules)) {
-      advisory.schedules = dto.schedules.map((schedule) => {
-        const advisorySchedule = this.advisoryScheduleRepo.create(schedule);
-        advisorySchedule.advisory = advisory;
-        return advisorySchedule;
-      });
+
+    // Validate schedules if provided
+    if (!dto.schedules || !Array.isArray(dto.schedules)) {
+      throw new NotFoundException(
+        `Schedules must be provided as an array in the advisory creation request`,
+      );
     }
-    // Save the advisory and its schedules
-    await this.advisoryRepo.save(advisory);
+
+    const savedAvisory = await this.advisoryRepo.save(advisory);
+
+    const schedules = dto.schedules.map((schedule) => {
+      return this.advisoryScheduleRepo.create({
+        ...schedule,
+        advisory: savedAvisory,
+      });
+    });
+
+    await this.advisoryScheduleRepo.save(schedules);
+
+    return this.advisoryRepo.save({ ...savedAvisory, schedules });
   }
 
   async findOne(id: number) {
@@ -69,8 +79,55 @@ export class AdvisoriesService {
   }
 
   async update(id: number, dto: UpdateAdvisoryDto) {
-    await this.advisoryRepo.update(id, dto);
-    return this.findOne(id);
+    const advisory = await this.findOne(id);
+    if (!advisory) {
+      throw new NotFoundException(`Advisory ID ${id} not found`);
+    }
+
+    if (dto.professor_id) {
+      const professor = await this.userRepo.findOne({
+        where: { user_id: dto.professor_id, role: UserRole.PROFESSOR },
+      });
+      if (!professor) {
+        throw new NotFoundException(
+          `Professor with ID ${dto.professor_id} not found`,
+        );
+      }
+      advisory.professor = professor;
+    }
+
+    if (dto.subject_detail_id) {
+      const subjectDetail = await this.subjectDetailRepo.findOne({
+        where: { subject_detail_id: dto.subject_detail_id },
+      });
+      if (!subjectDetail) {
+        throw new NotFoundException(
+          `Subject Detail with ID ${dto.subject_detail_id} not found`,
+        );
+      }
+      advisory.subject_detail = subjectDetail;
+    }
+
+    if (dto.max_students) {
+      advisory.max_students = dto.max_students;
+    }
+
+    if (dto.schedules) {
+      // Clear existing schedules
+      advisory.schedules = [];
+
+      // Remove existing schedules from the database
+      await this.advisoryScheduleRepo.remove(advisory.schedules);
+
+      // Add new schedules
+      for (const schedule of dto.schedules) {
+        const advisorySchedule = this.advisoryScheduleRepo.create(schedule);
+        advisorySchedule.advisory = advisory; // Set the relationship
+        advisory.schedules.push(advisorySchedule);
+      }
+    }
+
+    return this.advisoryRepo.save(advisory);
   }
 
   async remove(id: number) {

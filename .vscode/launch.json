@@ -1,22 +1,22 @@
 {
-    // Tutorial
-    // https://youtu.be/f3i9b3uK00U?feature=shared
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Debug Typescript",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "program": "${file}",
-            "runtimeArgs": ["-r", "ts-node/register", "-r", "tsconfig-paths/register"],
-            "console": "integratedTerminal",
-            "outFiles": [
-                "${workspaceFolder}/**/*.(m|c|)js",
-                "!**/node_modules/**"
-            ]
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug NestJS (ts-node)",
+      "runtimeArgs": [
+        "-r",
+        "ts-node/register",
+        "-r",
+        "tsconfig-paths/register"
+      ],
+      "args": ["${workspaceFolder}/src/main.ts"],
+      "cwd": "${workspaceFolder}",
+      "protocol": "inspector",
+      "internalConsoleOptions": "openOnSessionStart",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
 }
