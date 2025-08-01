@@ -26,11 +26,20 @@ class SubjectDetailDto {
   @ApiProperty()
   subject_detail_id: number;
 
+  @ApiProperty()
+  subject_name: string;
+
   @ApiProperty({ type: [SubjectScheduleDto] })
   schedules: SubjectScheduleDto[];
 }
 
 class ProfessorDto {
+  @ApiProperty()
+  user_id: number;
+
+  @ApiProperty()
+  school_id?: number;
+
   @ApiProperty()
   name: string;
 

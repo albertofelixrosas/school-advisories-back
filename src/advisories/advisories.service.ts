@@ -28,6 +28,8 @@ export class AdvisoriesService {
       advisory_id: advisory.advisory_id,
       max_students: advisory.max_students,
       professor: {
+        user_id: advisory.professor.user_id,
+        school_id: advisory.professor.school_id,
         name: advisory.professor.name,
         last_name: advisory.professor.last_name,
         email: advisory.professor.email,
@@ -35,6 +37,7 @@ export class AdvisoriesService {
       },
       subject_detail: {
         subject_detail_id: advisory.subject_detail.subject_detail_id,
+        subject_name: advisory.subject_detail.subject.subject,
         schedules: advisory.subject_detail.schedules.map((s) => ({
           day: s.day,
           start_time: s.start_time,
@@ -51,7 +54,7 @@ export class AdvisoriesService {
     return result;
   }
 
-  async create(dto: CreateAdvisoryDto) {
+  async create(dto: CreateAdvisoryDto): Promise<AdvisoryResponseDto> {
     const professor = await this.userRepo.findOne({
       where: { user_id: dto.professor_id, role: UserRole.PROFESSOR },
     });
@@ -102,7 +105,12 @@ export class AdvisoriesService {
   async findOne(id: number): Promise<AdvisoryResponseDto> {
     const advisory = await this.advisoryRepo.findOne({
       where: { advisory_id: id },
-      relations: ['professor.user', 'subject_detail.schedules', 'schedules'],
+      relations: [
+        'professor',
+        'subject_detail',
+        'schedules',
+        'subject_detail.subject',
+      ],
     });
     if (!advisory) {
       throw new NotFoundException(`Advisory ID ${id} not found`);
@@ -112,9 +120,14 @@ export class AdvisoriesService {
     return result;
   }
 
-  async findAll() {
+  async findAll(): Promise<AdvisoryResponseDto[]> {
     const advisories = await this.advisoryRepo.find({
-      relations: ['professor', 'subject_detail', 'schedules'],
+      relations: [
+        'professor',
+        'subject_detail',
+        'schedules',
+        'subject_detail.subject',
+      ],
     });
     const results: AdvisoryResponseDto[] = advisories.map((advisory) =>
       this.generateAdvisoryResponse(advisory),
@@ -123,7 +136,10 @@ export class AdvisoriesService {
     return results;
   }
 
-  async update(id: number, dto: UpdateAdvisoryDto) {
+  async update(
+    id: number,
+    dto: UpdateAdvisoryDto,
+  ): Promise<AdvisoryResponseDto> {
     const advisory = await this.findOne(id);
     if (!advisory) {
       throw new NotFoundException(`Advisory ID ${id} not found`);
@@ -144,13 +160,22 @@ export class AdvisoriesService {
     if (dto.subject_detail_id) {
       const subjectDetail = await this.subjectDetailRepo.findOne({
         where: { subject_detail_id: dto.subject_detail_id },
+        relations: ['subject', 'schedules'],
       });
       if (!subjectDetail) {
         throw new NotFoundException(
           `Subject Detail with ID ${dto.subject_detail_id} not found`,
         );
       }
-      advisory.subject_detail = subjectDetail;
+      advisory.subject_detail = {
+        subject_detail_id: subjectDetail.subject_detail_id,
+        subject_name: subjectDetail.subject.subject,
+        schedules: subjectDetail.schedules.map((s) => ({
+          day: s.day,
+          start_time: s.start_time,
+          end_time: s.end_time,
+        })),
+      };
     }
 
     if (dto.max_students) {
@@ -175,16 +200,24 @@ export class AdvisoriesService {
     }
 
     // Save the updated advisory entity, not the DTO
-    return this.advisoryRepo.save({ advisory_id: id, ...dto });
+    await this.advisoryRepo.save({ advisory_id: id, ...dto });
+    return advisory;
   }
 
-  async remove(id: number) {
+  async remove(id: number): Promise<AdvisoryResponseDto> {
     const advisory = await this.advisoryRepo.findOne({
       where: { advisory_id: id },
+      relations: [
+        'professor',
+        'subject_detail',
+        'schedules',
+        'subject_detail.subject',
+      ],
     });
     if (!advisory) {
       throw new NotFoundException(`Advisory ID ${id} not found`);
     }
-    return this.advisoryRepo.remove(advisory);
+    await this.advisoryRepo.remove(advisory);
+    return this.generateAdvisoryResponse(advisory);
   }
 }
