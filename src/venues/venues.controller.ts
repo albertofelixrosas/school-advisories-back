@@ -61,7 +61,7 @@ export class VenuesController {
   }
 
   @Get()
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
   @ApiOperation({ summary: 'Listar todas las ubicaciones' })
   @ApiOkResponse({ description: 'Lista de ubicaciones' })
   findAll(@Query() query: VenueQueryDto): Promise<PaginatedResult<VenueDto>> {
