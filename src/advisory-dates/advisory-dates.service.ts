@@ -8,6 +8,8 @@ import { UpdateAdvisoryDateDto } from './dto/update-advisory-date.dto';
 import { Repository } from 'typeorm';
 import { AdvisoryDate } from './entities/advisory-date.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Advisory } from 'src/advisories/entities/advisory.entity';
+import { Venue } from 'src/venues/entities/venue.entity';
 
 @Injectable()
 export class AdvisoryDatesService {
@@ -15,6 +17,10 @@ export class AdvisoryDatesService {
     // Inject any required dependencies here, e.g., repositories or other services
     @InjectRepository(AdvisoryDate)
     private readonly advisoryDateRepo: Repository<AdvisoryDate>,
+    @InjectRepository(Advisory)
+    private readonly advisoryRepo: Repository<Advisory>,
+    @InjectRepository(Venue)
+    private readonly venueRepo: Repository<Venue>,
   ) {}
 
   async create(dto: CreateAdvisoryDateDto) {
@@ -24,7 +30,7 @@ export class AdvisoryDatesService {
     }
 
     // Check if the advisory and venue exist
-    const advisory = await this.advisoryDateRepo.manager.findOne(AdvisoryDate, {
+    const advisory = await this.advisoryRepo.findOne({
       where: { advisory_id: dto.advisory_id },
     });
 
@@ -34,7 +40,7 @@ export class AdvisoryDatesService {
       );
     }
 
-    const venue = await this.advisoryDateRepo.manager.findOne(AdvisoryDate, {
+    const venue = await this.venueRepo.findOne({
       where: { venue_id: dto.venue_id },
     });
 
@@ -58,6 +64,7 @@ export class AdvisoryDatesService {
   async findOne(id: number) {
     const advisoryDate = await this.advisoryDateRepo.findOne({
       where: { advisory_date_id: id },
+      relations: ['advisory', 'venue', 'attendances'], // Include related entities if needed
     });
 
     if (!advisoryDate) {
@@ -76,7 +83,35 @@ export class AdvisoryDatesService {
       throw new NotFoundException(`Advisory Date with ID ${id} not found`);
     }
 
-    // Update the fields that are provided in the DTO
+    if (dto.venue_id) {
+      const venue = await this.venueRepo.findOne({
+        where: { venue_id: dto.venue_id },
+      });
+
+      if (!venue) {
+        throw new BadRequestException(
+          `Venue with ID ${dto.venue_id} not found`,
+        );
+      }
+      dto.venue_id = venue.venue_id; // Ensure the venue ID is valid
+    }
+
+    if (dto.date) {
+      const date = new Date(dto.date);
+      if (isNaN(date.getTime())) {
+        throw new BadRequestException('Invalid date format');
+      }
+      dto.date = date.toISOString(); // Ensure the date is in ISO format
+    }
+
+    if (dto.topic) {
+      if (dto.topic.trim() === '') {
+        throw new BadRequestException('Topic cannot be empty');
+      }
+      dto.topic = dto.topic.trim(); // Trim whitespace from the topic
+    }
+
+    // Update the advisory date with the new values
     Object.assign(advisoryDate, dto);
 
     // Save the updated advisory date to the database

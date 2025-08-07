@@ -25,7 +25,7 @@ export class Advisory {
   @Column()
   max_students: number;
 
-  @ManyToOne(() => User, (user) => user.advisory_dates)
+  @ManyToOne(() => User, (user) => user.advisories)
   @JoinColumn({ name: 'professor_id' })
   professor: User;
 

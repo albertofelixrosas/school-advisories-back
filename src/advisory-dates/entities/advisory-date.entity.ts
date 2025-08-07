@@ -1,6 +1,5 @@
 import { Advisory } from 'src/advisories/entities/advisory.entity';
 import { AdvisoryAttendance } from 'src/advisory-attendance/entities/advisory-attendance.entity';
-import { User } from 'src/users/entities/user.entity';
 import { Venue } from 'src/venues/entities/venue.entity';
 import {
   Column,
@@ -37,10 +36,6 @@ export class AdvisoryDate {
   @ManyToOne(() => Venue, (venue) => venue.advisory_dates)
   @JoinColumn({ name: 'venue_id' })
   venue: Venue;
-
-  // One advisory date have a list of students but a student can have many advisory dates
-  @OneToMany(() => User, (student) => student.advisory_dates)
-  students: User[];
 
   @OneToMany(() => AdvisoryAttendance, (attendance) => attendance.advisory_date)
   attendances: AdvisoryAttendance[];

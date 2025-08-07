@@ -1,7 +1,13 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateAdvisoryDateDto } from './create-advisory-date.dto';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsString, IsDateString, IsOptional } from 'class-validator';
+import {
+  IsInt,
+  IsString,
+  IsDateString,
+  IsOptional,
+  IsArray,
+} from 'class-validator';
 
 export class UpdateAdvisoryDateDto extends PartialType(CreateAdvisoryDateDto) {
   @ApiPropertyOptional({ example: 1, description: 'ID de la asesoría' })
@@ -32,4 +38,13 @@ export class UpdateAdvisoryDateDto extends PartialType(CreateAdvisoryDateDto) {
   @IsOptional()
   @IsDateString()
   date?: string;
+
+  @ApiPropertyOptional({
+    example: [1, 2, 3],
+    description:
+      'Lista de IDs de estudiantes que pueden asistir a esta fecha de asesoría',
+    required: false,
+  })
+  @IsArray()
+  students?: number[]; // Optional array of student IDs who can attend this advisory date
 }

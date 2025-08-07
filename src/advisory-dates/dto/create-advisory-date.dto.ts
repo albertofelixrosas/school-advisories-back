@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsString, IsDateString } from 'class-validator';
+import { IsInt, IsString, IsDateString, IsArray } from 'class-validator';
 
 export class CreateAdvisoryDateDto {
   @ApiProperty({ example: 1, description: 'ID de la asesoría' })
@@ -26,4 +26,13 @@ export class CreateAdvisoryDateDto {
   })
   @IsDateString()
   date: string;
+
+  @ApiProperty({
+    example: [1, 2, 3],
+    description:
+      'Lista de IDs de estudiantes que pueden asistir a esta fecha de asesoría',
+    required: false,
+  })
+  @IsArray()
+  students?: number[]; // Optional array of student IDs who can attend this advisory date
 }

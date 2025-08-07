@@ -3,12 +3,13 @@ import {
   PrimaryGeneratedColumn,
   Column,
   OneToMany,
-  ManyToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { UserRole } from '../user-role.enum';
 import { SubjectDetails } from '../../subject-details/entities/subject-detail.entity';
-import { AdvisoryDate } from 'src/advisory-dates/entities/advisory-date.entity';
 import { AdvisoryAttendance } from 'src/advisory-attendance/entities/advisory-attendance.entity';
+import { Advisory } from 'src/advisories/entities/advisory.entity';
 
 @Entity('users')
 export class User {
@@ -49,9 +50,9 @@ export class User {
   @OneToMany(() => SubjectDetails, (details) => details.professor)
   subject_details: SubjectDetails[];
 
-  // Many user students can have many advisory dates (Many to Many relationship)
-  @ManyToMany(() => AdvisoryDate, (advisoryDate) => advisoryDate.students)
-  advisory_dates: AdvisoryDate[];
+  @ManyToOne(() => Advisory, (advisory) => advisory.professor)
+  @JoinColumn({ name: 'professor_id' })
+  advisories: Advisory[];
 
   @OneToMany(() => AdvisoryAttendance, (attendance) => attendance.student)
   attendances: AdvisoryAttendance[];
