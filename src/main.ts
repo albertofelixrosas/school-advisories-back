@@ -56,7 +56,7 @@ async function bootstrap() {
     .setDescription(
       `<p>Esta es la documentación de la API de asesorías.</p>
   <p><strong>Diagrama Entidad-Relación:</strong></p>
-  ><img src="/docs/images/er-diagram-${diagramTheme}.svg" alt="ER Diagram" width="100%"/>`,
+  <img src="/docs/images/er-diagram-${diagramTheme}.svg" alt="ER Diagram" width="100%"/>`,
     )
     .setVersion('1.0')
     .addBearerAuth(

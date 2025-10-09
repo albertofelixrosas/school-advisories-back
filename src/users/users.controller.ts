@@ -19,6 +19,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { Roles } from 'src/auth/roles.decorator';
 import { UserRole } from './user-role.enum';
@@ -96,25 +97,101 @@ export class UsersController {
   @Put(':id')
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Actualizar información del usuario' })
-  @ApiOkResponse({ description: 'Usuario actualizado correctamente' })
+  @ApiBody({
+    type: UpdateUserDto,
+    description:
+      'Datos del usuario a actualizar (todos los campos son opcionales)',
+    examples: {
+      'Actualización completa': {
+        value: {
+          name: 'Juan Carlos',
+          last_name: 'Pérez García',
+          email: 'juan.carlos.perez@example.com',
+          phone_number: '+526441234567',
+          username: 'juancarlos2024',
+          password: 'nueva_clave_segura456',
+          photo_url:
+            'https://firebasestorage.googleapis.com/v0/b/project/o/users%2Fjuan.jpg',
+          school_id: 3,
+          role: 'professor',
+        },
+      },
+      'Actualización parcial - solo nombre y email': {
+        value: {
+          name: 'María Elena',
+          email: 'maria.elena@example.com',
+        },
+      },
+      'Actualización de contraseña': {
+        value: {
+          password: 'mi_nueva_contraseña_segura',
+        },
+      },
+    },
+  })
+  @ApiOkResponse({
+    description: 'Usuario actualizado correctamente',
+    schema: {
+      example: {
+        user_id: 1,
+        name: 'Juan Carlos',
+        last_name: 'Pérez García',
+        email: 'juan.carlos.perez@example.com',
+        phone_number: '+526441234567',
+        username: 'juancarlos2024',
+        photo_url:
+          'https://firebasestorage.googleapis.com/v0/b/project/o/users%2Fjuan.jpg',
+        school_id: 3,
+        role: 'professor',
+      },
+    },
+  })
   @ApiBadRequestResponse({
     description: 'Datos inválidos o usuario no encontrado',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: 'Usuario no encontrado o datos inválidos',
+        error: 'Bad Request',
+      },
+    },
   })
-  update(@Param('id') id: number, @Body() body: Partial<CreateUserDto>) {
+  async update(@Param('id') id: number, @Body() body: UpdateUserDto) {
     try {
-      return this.usersService.update(id, body);
+      return await this.usersService.update(id, body);
     } catch (error) {
       if (error instanceof Error) {
         // Log the error for debugging purposes
         console.error('Error al actualizar el usuario:', error.message);
+
+        // Manejar diferentes tipos de errores
+        if (error.message.includes('ya está en uso')) {
+          return {
+            statusCode: HttpStatus.CONFLICT,
+            message: error.message,
+            error: 'Conflict',
+          };
+        }
+
+        if (error.message.includes('no encontrado')) {
+          return {
+            statusCode: HttpStatus.NOT_FOUND,
+            message: error.message,
+            error: 'Not Found',
+          };
+        }
+
+        return {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: error.message,
+          error: 'Bad Request',
+        };
       }
+
       return {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Error al actualizar el usuario',
-        error: 'Bad Request',
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Error interno del servidor',
+        error: 'Internal Server Error',
       };
     }
   }
