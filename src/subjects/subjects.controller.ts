@@ -56,17 +56,23 @@ export class SubjectsController {
   }
 
   @Get()
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Listar todas las materias' })
-  @ApiOkResponse({ description: 'Lista de materias' })
+  @ApiOperation({
+    summary: 'Listar todas las materias',
+    description:
+      'Obtiene el catálogo completo de materias. Disponible para todos los usuarios autenticados.',
+  })
+  @ApiOkResponse({ description: 'Lista de materias obtenida exitosamente' })
   findAll() {
     return this.subjectsService.findAll();
   }
 
   @Get(':id')
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Obtener una materia por ID' })
-  @ApiOkResponse({ description: 'Materia encontrada' })
+  @ApiOperation({
+    summary: 'Obtener una materia por ID',
+    description:
+      'Obtiene los detalles de una materia específica por su ID. Disponible para todos los usuarios autenticados.',
+  })
+  @ApiOkResponse({ description: 'Materia encontrada exitosamente' })
   @ApiNotFoundResponse({ description: 'Materia no encontrada' })
   findOne(@Param('id') id: string) {
     try {
