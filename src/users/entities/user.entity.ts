@@ -40,6 +40,12 @@ export class User {
   @Column({ nullable: true })
   photo_url: string;
 
+  @Column({ nullable: true })
+  student_id: string;
+
+  @Column({ nullable: true })
+  employee_id: string;
+
   @Column({
     type: 'enum',
     enum: UserRole,

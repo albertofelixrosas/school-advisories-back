@@ -69,6 +69,24 @@ export class CreateUserDto {
   school_id: number;
 
   @ApiProperty({
+    example: 'ST2024001',
+    description: 'ID del estudiante (solo para estudiantes)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  student_id?: string;
+
+  @ApiProperty({
+    example: 'PR2024001',
+    description: 'ID del empleado (para profesores y admin)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  employee_id?: string;
+
+  @ApiProperty({
     example: 'student',
     description: 'Rol del usuario (admin, professor, student)',
     required: false,

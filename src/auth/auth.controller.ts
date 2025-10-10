@@ -19,6 +19,7 @@ import {
 } from '@nestjs/swagger';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { LoginResponseDto } from './dto/login-response.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -26,49 +27,75 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('login')
-  @ApiBody({ type: LoginDto })
-  @ApiOperation({ summary: 'Iniciar sesión y obtener token JWT' })
+  @ApiOperation({
+    summary: 'Iniciar sesión y obtener token JWT con datos del dashboard',
+    description:
+      'Autentica al usuario y retorna tokens JWT junto con información personalizada del dashboard según su rol (profesor, estudiante o admin)',
+  })
   @ApiBody({ type: LoginDto })
   @ApiOkResponse({
-    description: 'Token generado correctamente',
+    description: 'Login exitoso con datos del dashboard incluidos',
+    type: LoginResponseDto,
     schema: {
       example: {
-        access_token: 'eyJhbGciOiJIUzI...',
-        refresh_token: 'eyJhbGciOiJIUzA...',
-        username: 'Juan Rulfo',
+        access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        refresh_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        username: 'jdoe2024',
+        user: {
+          user_id: 1,
+          username: 'jdoe2024',
+          name: 'Juan',
+          last_name: 'Doe',
+          email: 'juan.doe@university.edu',
+          phone_number: '+526441234567',
+          role: 'professor',
+          photo_url: 'https://example.com/photo.jpg',
+          school_id: 1,
+          employee_id: 'PR2024001',
+        },
+        dashboard_data: {
+          professor_stats: {
+            active_advisories_count: 5,
+            total_students_enrolled: 25,
+            upcoming_sessions_count: 3,
+            completed_sessions_count: 12,
+          },
+          assigned_subjects: [],
+          active_advisories: [],
+          upcoming_advisory_dates: [],
+        },
       },
     },
   })
   @ApiUnauthorizedResponse({ description: 'Credenciales inválidas' })
-  async login(@Body() body: LoginDto) {
-    // Envolver en un try-catch para manejar errores de validación
+  async login(@Body() body: LoginDto): Promise<LoginResponseDto> {
     try {
       if (!body.username || !body.password) {
         throw new UnauthorizedException('Credenciales incompletas');
       }
-      // Validar el formato del username y password
+
       if (
         typeof body.username !== 'string' ||
         typeof body.password !== 'string'
       ) {
         throw new UnauthorizedException('Credenciales inválidas');
       }
+
       const user = await this.authService.validateUser(
         body.username,
         body.password,
       );
-      return this.authService.login(user);
+
+      return await this.authService.login(user);
     } catch (error) {
-      // Manejar errores específicos de validación
       if (error instanceof UnauthorizedException) {
-        // Log the error for debugging purposes
-        throw error; // Re-throw the error to be handled by the global exception filter
+        throw error;
       }
-      // Log cualquier otro error inesperado
+
       if (error instanceof Error) {
-        // Log the error for debugging purposes
         console.error('Error al iniciar sesión:', error.message);
       }
+
       throw new UnauthorizedException('Error al iniciar sesión');
     }
   }
