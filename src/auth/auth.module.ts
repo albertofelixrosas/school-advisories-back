@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { ProfileService } from './profile.service';
 import { UsersModule } from '../users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -28,7 +29,7 @@ import { RefreshTokenRepository } from './repositories/refresh-token.repository'
       }),
     }),
   ],
-  providers: [AuthService, JwtStrategy, RefreshTokenRepository],
+  providers: [AuthService, ProfileService, JwtStrategy, RefreshTokenRepository],
   controllers: [AuthController],
 })
 export class AuthModule {}
