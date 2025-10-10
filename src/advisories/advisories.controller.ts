@@ -72,6 +72,95 @@ export class AdvisoriesController {
     return this.advisoriesService.findAll();
   }
 
+  @Get('professor/:professorId')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT)
+  @ApiOperation({
+    summary: 'Obtener todas las asesorías de un profesor específico',
+    description:
+      'Obtiene todas las asesorías asignadas a un profesor, incluyendo información del profesor, detalles de materia y horarios',
+  })
+  @ApiOkResponse({
+    description: 'Asesorías del profesor obtenidas exitosamente',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          advisory_id: { type: 'number' },
+          max_students: { type: 'number' },
+          professor: {
+            type: 'object',
+            properties: {
+              user_id: { type: 'number' },
+              name: { type: 'string' },
+              last_name: { type: 'string' },
+              email: { type: 'string' },
+              photo_url: { type: 'string' },
+            },
+          },
+          subject_detail: {
+            type: 'object',
+            properties: {
+              subject_detail_id: { type: 'number' },
+              subject_name: { type: 'string' },
+              schedules: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    day: { type: 'string' },
+                    start_time: { type: 'string' },
+                    end_time: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          schedules: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                advisory_schedule_id: { type: 'number' },
+                day: { type: 'string' },
+                begin_time: { type: 'string' },
+                end_time: { type: 'string' },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiNotFoundResponse({ description: 'Profesor no encontrado' })
+  async findByProfessor(
+    @Param('professorId', ParseIntPipe) professorId: number,
+  ) {
+    try {
+      return await this.advisoriesService.findByProfessor(professorId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return {
+          statusCode: 404,
+          message: error.message,
+          error: 'Not Found',
+        };
+      }
+      // Log other unexpected errors
+      if (error instanceof Error) {
+        console.error(
+          'Error al obtener asesorías del profesor:',
+          error.message,
+        );
+      }
+      return {
+        statusCode: 500,
+        message: 'Error interno del servidor al obtener las asesorías',
+        error: 'Internal Server Error',
+      };
+    }
+  }
+
   @Get(':id')
   @Roles(UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT)
   @ApiOperation({ summary: 'Obtener asesoría por ID' })

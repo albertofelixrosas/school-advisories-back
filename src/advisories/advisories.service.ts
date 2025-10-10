@@ -204,6 +204,39 @@ export class AdvisoriesService {
     return advisory;
   }
 
+  async findByProfessor(professorId: number): Promise<AdvisoryResponseDto[]> {
+    // Verificar que el profesor existe
+    const professor = await this.userRepo.findOne({
+      where: { user_id: professorId, role: UserRole.PROFESSOR },
+    });
+
+    if (!professor) {
+      throw new NotFoundException(
+        `Professor with id ${professorId} not found or is not a professor`,
+      );
+    }
+
+    // Obtener todas las asesorías del profesor con relaciones completas
+    const advisories = await this.advisoryRepo.find({
+      where: { professor_id: professorId },
+      relations: [
+        'professor',
+        'subject_detail',
+        'subject_detail.subject',
+        'subject_detail.schedules',
+        'schedules',
+      ],
+      order: {
+        advisory_id: 'DESC', // Más recientes primero
+      },
+    });
+
+    // Mapear a DTOs de respuesta
+    return advisories.map((advisory) =>
+      this.generateAdvisoryResponse(advisory),
+    );
+  }
+
   async remove(id: number): Promise<AdvisoryResponseDto> {
     const advisory = await this.advisoryRepo.findOne({
       where: { advisory_id: id },
