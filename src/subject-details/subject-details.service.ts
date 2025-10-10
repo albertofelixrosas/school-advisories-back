@@ -39,11 +39,11 @@ export class SubjectDetailsService {
 
     // Validar user (professor)
     const professor = await this.userRepo.findOne({
-      where: [{ user_id: dto.professor_id }, { role: UserRole.PROFESSOR }],
+      where: { user_id: dto.professor_id, role: UserRole.PROFESSOR },
     });
     if (!professor) {
       throw new NotFoundException(
-        `Professor with id ${dto.professor_id} not found`,
+        `Professor with id ${dto.professor_id} not found or is not a professor`,
       );
     }
 
@@ -103,11 +103,11 @@ export class SubjectDetailsService {
     // Actualizar campos simples
     if (dto.professor_id) {
       const professor = await this.userRepo.findOne({
-        where: [{ user_id: dto.professor_id }, { role: UserRole.PROFESSOR }],
+        where: { user_id: dto.professor_id, role: UserRole.PROFESSOR },
       });
       if (!professor) {
         throw new NotFoundException(
-          `Professor with id ${dto.professor_id} not found`,
+          `Professor with id ${dto.professor_id} not found or is not a professor`,
         );
       }
       detail.professor = professor;
