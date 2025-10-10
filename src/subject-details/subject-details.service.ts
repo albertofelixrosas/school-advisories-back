@@ -145,6 +145,32 @@ export class SubjectDetailsService {
     return this.detailsRepo.save(detail);
   }
 
+  async findByProfessor(professorId: number) {
+    // Verificar que el profesor existe
+    const professor = await this.userRepo.findOne({
+      where: { user_id: professorId, role: UserRole.PROFESSOR },
+    });
+
+    if (!professor) {
+      throw new NotFoundException(
+        `Professor with id ${professorId} not found or is not a professor`,
+      );
+    }
+
+    // Obtener todas las asignaciones del profesor con relaciones completas
+    const subjectDetails = await this.detailsRepo.find({
+      where: { professor_id: professorId },
+      relations: ['subject', 'schedules', 'advisories', 'professor'],
+      order: {
+        subject: {
+          subject: 'ASC',
+        },
+      },
+    });
+
+    return subjectDetails;
+  }
+
   remove(id: number) {
     return this.detailsRepo.delete(id);
   }
