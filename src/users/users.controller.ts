@@ -74,6 +74,61 @@ export class UsersController {
     return this.usersService.findByRole(UserRole.PROFESSOR);
   }
 
+  @Get('students/:studentId/subjects')
+  @ApiOperation({
+    summary: 'Obtener las materias de un estudiante específico',
+    description:
+      'Retorna las materias en las que está inscrito un estudiante a través de sus asesorías programadas',
+  })
+  @ApiOkResponse({
+    description: 'Materias del estudiante obtenidas exitosamente',
+    schema: {
+      type: 'object',
+      properties: {
+        student: {
+          type: 'object',
+          properties: {
+            user_id: { type: 'number' },
+            name: { type: 'string' },
+            last_name: { type: 'string' },
+            email: { type: 'string' },
+            student_id: { type: 'string' },
+          },
+        },
+        enrolled_subjects: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              subject_detail_id: { type: 'number' },
+              subject: {
+                type: 'object',
+                properties: {
+                  subject_id: { type: 'number' },
+                  subject: { type: 'string' },
+                },
+              },
+              professor: {
+                type: 'object',
+                properties: {
+                  user_id: { type: 'number' },
+                  name: { type: 'string' },
+                  last_name: { type: 'string' },
+                  email: { type: 'string' },
+                  photo_url: { type: 'string' },
+                },
+              },
+              advisories_count: { type: 'number' },
+            },
+          },
+        },
+      },
+    },
+  })
+  findStudentSubjects(@Param('studentId') studentId: string) {
+    return this.usersService.findStudentSubjects(+studentId);
+  }
+
   @Patch(':id/role')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Actualizar rol del usuario' })

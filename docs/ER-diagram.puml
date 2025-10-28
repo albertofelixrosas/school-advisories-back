@@ -1,0 +1,201 @@
+@startuml School Advisories - Entity Relationship Diagram
+
+!define ENTITY class
+!define ENUM enum
+
+' ===== ENUMS =====
+ENUM UserRole {
+  ADMIN
+  PROFESSOR  
+  STUDENT
+}
+
+ENUM VenueType {
+  CLASSROOM
+  OFFICE
+  VIRTUAL
+}
+
+ENUM WeekDay {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+' ===== MAIN ENTITIES =====
+ENTITY User {
+  + user_id : number <<PK>>
+  --
+  name : string
+  last_name : string  
+  email : string <<unique>>
+  phone_number : string <<unique>>
+  school_id : number <<nullable>>
+  username : string <<unique>>
+  password : string
+  photo_url : string <<nullable>>
+  student_id : string <<nullable>>
+  employee_id : string <<nullable>>
+  role : UserRole <<default: STUDENT>>
+}
+
+ENTITY Subject {
+  + subject_id : number <<PK>>
+  --
+  subject : string <<unique>>
+}
+
+ENTITY SubjectDetails {
+  + subject_detail_id : number <<PK>>
+  --
+  subject_id : number <<FK>>
+  professor_id : number <<FK>>
+}
+
+ENTITY SubjectSchedule {
+  + subject_schedule_id : number <<PK>>
+  --
+  day : WeekDay
+  start_time : string
+  end_time : string
+  subject_details_id : number <<FK>>
+}
+
+ENTITY Advisory {
+  + advisory_id : number <<PK>>
+  --
+  professor_id : number <<FK>>
+  subject_detail_id : number <<FK>>
+  max_students : number
+}
+
+ENTITY AdvisorySchedule {
+  + advisory_schedule_id : number <<PK>>
+  --
+  day : WeekDay
+  begin_time : time
+  end_time : time
+  advisory_id : number <<FK>>
+}
+
+ENTITY AdvisoryDate {
+  + advisory_date_id : number <<PK>>
+  --
+  advisory_id : number <<FK>>
+  venue_id : number <<FK>>
+  topic : string
+  date : string
+}
+
+ENTITY AdvisoryAttendance {
+  + advisory_attendance_id : number <<PK>>
+  --
+  student_id : number <<FK>>
+  advisory_date_id : number <<FK>>
+  attended : boolean <<default: false>>
+}
+
+ENTITY Venue {
+  + venue_id : number <<PK>>
+  --
+  name : string
+  type : VenueType <<default: CLASSROOM>>
+  url : string <<nullable>>
+  building : string <<nullable>>
+  floor : string <<nullable>>
+}
+
+ENTITY RefreshToken {
+  + id : number <<PK>>
+  --
+  token : string
+  user_id : number <<FK>>
+  expires_at : timestamp
+}
+
+' ===== RELATIONSHIPS =====
+
+' User relationships
+User ||--o{ SubjectDetails : "professor teaches"
+User ||--o{ Advisory : "professor creates"
+User ||--o{ AdvisoryAttendance : "student attends"
+User ||--o{ RefreshToken : "has tokens"
+
+' Subject relationships  
+Subject ||--o{ SubjectDetails : "has details"
+
+' SubjectDetails relationships
+SubjectDetails ||--o{ SubjectSchedule : "has schedules"
+SubjectDetails ||--o{ Advisory : "has advisories"
+
+' Advisory relationships
+Advisory ||--o{ AdvisorySchedule : "has recurring schedule"
+Advisory ||--o{ AdvisoryDate : "has specific dates"
+
+' AdvisoryDate relationships
+AdvisoryDate ||--o{ AdvisoryAttendance : "tracks attendance"
+
+' Venue relationships
+Venue ||--o{ AdvisoryDate : "hosts sessions"
+
+' ===== RELATIONSHIP DETAILS =====
+note right of User
+  • Professor: Can teach multiple subjects (SubjectDetails)
+  • Professor: Can create multiple advisories  
+  • Student: Can attend multiple advisory sessions
+  • All roles: Can have multiple refresh tokens
+end note
+
+note right of SubjectDetails
+  Bridge between Subject and Professor
+  • One professor per subject detail
+  • One subject per subject detail
+  • Can have multiple schedules and advisories
+end note
+
+note right of Advisory
+  • Created by one professor
+  • Related to one subject detail
+  • Has recurring schedule patterns
+  • Has specific session dates
+end note
+
+note right of AdvisoryDate
+  • Specific session instance
+  • Held at one venue
+  • Students register attendance
+end note
+
+note bottom of AdvisoryAttendance
+  Junction table between Student and AdvisoryDate
+  Tracks actual attendance per session
+end note
+
+' ===== BUSINESS RULES =====
+note top of SubjectDetails
+  BUSINESS RULES:
+  • A professor can teach multiple subjects
+  • A subject can be taught by multiple professors
+  • Each SubjectDetails represents a specific professor-subject assignment
+end note
+
+note top of Advisory
+  BUSINESS RULES:
+  • An advisory is tied to a specific SubjectDetails (professor + subject)
+  • Has a maximum student capacity (max_students)
+  • Can have recurring weekly schedules
+  • Can have specific session dates
+end note
+
+note top of AdvisoryAttendance
+  BUSINESS RULES:
+  • Students register for specific advisory dates
+  • Attendance is tracked per session
+  • A student can attend multiple advisories
+end note
+
+@enduml

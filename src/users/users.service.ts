@@ -47,9 +47,102 @@ export class UsersService {
   }
 
   async findByRole(role: UserRole) {
+    // Respuesta consistente para todos los roles - solo datos básicos de usuario
+    // Para relaciones específicas usar endpoints dedicados como /subject-details/professor/:id
     return this.usersRepo.find({
       where: { role },
+      select: [
+        'user_id',
+        'name',
+        'last_name',
+        'email',
+        'phone_number',
+        'username',
+        'photo_url',
+        'school_id',
+        'student_id',
+        'employee_id',
+        'role',
+      ],
     });
+  }
+
+  async findStudentSubjects(studentId: number) {
+    // Obtener las materias en las que está inscrito un estudiante específico
+    // a través de sus asesorías programadas
+    const student = await this.usersRepo.findOne({
+      where: { user_id: studentId, role: UserRole.STUDENT },
+      relations: [
+        'attendances',
+        'attendances.advisory_date',
+        'attendances.advisory_date.advisory',
+        'attendances.advisory_date.advisory.subject_detail',
+        'attendances.advisory_date.advisory.subject_detail.subject',
+        'attendances.advisory_date.advisory.subject_detail.professor',
+      ],
+    });
+
+    if (!student) {
+      throw new NotFoundException(
+        `Estudiante con ID ${studentId} no encontrado`,
+      );
+    }
+
+    // Extraer y organizar las materias únicas
+    type SubjectMapValue = {
+      subject_detail_id: number;
+      subject: any;
+      professor: {
+        user_id: number;
+        name: string;
+        last_name: string;
+        email: string;
+        photo_url?: string | null;
+      };
+      advisories_count: number;
+    };
+
+    const subjectsMap = new Map<string, SubjectMapValue>();
+
+    student.attendances.forEach((attendance) => {
+      const advisory = attendance.advisory_date?.advisory;
+      if (advisory?.subject_detail) {
+        const subjectDetail = advisory.subject_detail;
+        const key = `${subjectDetail.subject_id}-${subjectDetail.professor_id}`;
+
+        if (!subjectsMap.has(key)) {
+          subjectsMap.set(key, {
+            subject_detail_id: subjectDetail.subject_detail_id,
+            subject: subjectDetail.subject,
+            professor: {
+              user_id: subjectDetail.professor.user_id,
+              name: subjectDetail.professor.name,
+              last_name: subjectDetail.professor.last_name,
+              email: subjectDetail.professor.email,
+              photo_url: subjectDetail.professor.photo_url,
+            },
+            advisories_count: 0,
+          });
+        }
+
+        // Incrementar contador de asesorías
+        const subjectInfo = subjectsMap.get(key);
+        if (subjectInfo) {
+          subjectInfo.advisories_count += 1;
+        }
+      }
+    });
+
+    return {
+      student: {
+        user_id: student.user_id,
+        name: student.name,
+        last_name: student.last_name,
+        email: student.email,
+        student_id: student.student_id,
+      },
+      enrolled_subjects: Array.from(subjectsMap.values()),
+    };
   }
 
   async updateRole(id: number, role: UserRole) {
