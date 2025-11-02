@@ -50,17 +50,17 @@ Este documento contiene el plan paso a paso para migrar el proyecto actual hacia
 - [x] **1.1.4** Configurar módulo de Bull Queue para emails asíncronos ✅
 
 ### 1.2 Actualización de Base de Datos
-- [ ] **1.2.1** Crear migración para nuevos campos en entidades existentes
-  - Agregar `status`, `created_by_id`, `cancelled_by_id` a `Advisory`
-  - Agregar `notes`, `session_link`, `completed_at` a `AdvisoryDate`
+- [x] **1.2.1** Crear migración para nuevos campos en entidades existentes ✅
+  - Agregar `status`, `created_by_id`, `cancelled_by_id`, `created_at`, `updated_at` a `Advisory`
+  - Agregar `notes`, `session_link`, `completed_at`, `created_at`, `updated_at` a `AdvisoryDate`
   - Agregar `max_students_per_slot`, `is_active` a `AdvisorySchedule`
-  - Agregar `last_login_at`, `is_active` a `User`
+  - Agregar `last_login_at`, `is_active`, `created_at`, `updated_at` a `User`
 
-- [ ] **1.2.2** Crear entidad `AdvisoryRequest`
-- [ ] **1.2.3** Crear entidad `NotificationPreferences` 
-- [ ] **1.2.4** Crear entidad `NotificationLogs`
-- [ ] **1.2.5** Crear entidad `EmailTemplates`
-- [ ] **1.2.6** Ejecutar migraciones y verificar integridad
+- [x] **1.2.2** Crear entidad `AdvisoryRequest` ✅
+- [x] **1.2.3** Crear entidad `NotificationPreferences` ✅
+- [x] **1.2.4** Crear entidad `NotificationLogs` ✅
+- [x] **1.2.5** Crear entidad `EmailTemplates` ✅
+- [x] **1.2.6** Ejecutar migraciones y verificar integridad ✅
 
 ---
 

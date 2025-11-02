@@ -31,6 +31,10 @@ import { AdvisoryAttendanceModule } from './advisory-attendance/advisory-attenda
 import { AdvisoryAttendance } from './advisory-attendance/entities/advisory-attendance.entity';
 import { QueueModule } from './queue/queue.module';
 import { EmailModule } from './email/email.module';
+import { AdvisoryRequest } from './advisory-requests/entities/advisory-request.entity';
+import { NotificationPreferences } from './notifications/entities/notification-preferences.entity';
+import { NotificationLogs } from './notifications/entities/notification-logs.entity';
+import { EmailTemplates } from './notifications/entities/email-templates.entity';
 
 @Module({
   imports: [
@@ -73,6 +77,11 @@ import { EmailModule } from './email/email.module';
           AdvisorySchedule,
           AdvisoryAttendance,
           Venue,
+          // Nuevas entidades
+          AdvisoryRequest,
+          NotificationPreferences,
+          NotificationLogs,
+          EmailTemplates,
         ],
         synchronize: true, // solo para desarrollo
       }),

@@ -28,6 +28,12 @@ export class AdvisorySchedule {
   @Column()
   advisory_id: number;
 
+  @Column({ default: 5 })
+  max_students_per_slot: number;
+
+  @Column({ default: true })
+  is_active: boolean;
+
   @ManyToOne(() => Advisory, (advisory) => advisory.schedules, {
     onDelete: 'CASCADE',
   })

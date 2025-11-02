@@ -5,11 +5,14 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { AdvisorySchedule } from 'src/advisory-schedules/entities/advisory-schedule.entity';
 import { SubjectDetails } from 'src/subject-details/entities/subject-detail.entity';
 import { AdvisoryDate } from 'src/advisory-dates/entities/advisory-date.entity';
+import { AdvisoryStatus } from '../advisory-status.enum';
 
 @Entity('advisories')
 export class Advisory {
@@ -24,6 +27,25 @@ export class Advisory {
 
   @Column()
   max_students: number;
+
+  @Column({
+    type: 'enum',
+    enum: AdvisoryStatus,
+    default: AdvisoryStatus.PENDING,
+  })
+  status: AdvisoryStatus;
+
+  @Column({ nullable: true })
+  created_by_id: number;
+
+  @Column({ nullable: true })
+  cancelled_by_id: number;
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
 
   @ManyToOne(() => User, (user) => user.advisories)
   @JoinColumn({ name: 'professor_id' })

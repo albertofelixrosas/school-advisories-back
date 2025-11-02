@@ -5,6 +5,8 @@ import {
   OneToMany,
   ManyToOne,
   JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { UserRole } from '../user-role.enum';
 import { SubjectDetails } from '../../subject-details/entities/subject-detail.entity';
@@ -52,6 +54,18 @@ export class User {
     default: UserRole.STUDENT,
   })
   role: UserRole;
+
+  @Column({ nullable: true })
+  last_login_at: Date;
+
+  @Column({ default: true })
+  is_active: boolean;
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
 
   @OneToMany(() => SubjectDetails, (details) => details.professor)
   subject_details: SubjectDetails[];

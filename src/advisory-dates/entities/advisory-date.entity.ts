@@ -8,6 +8,8 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity('advisory_dates')
@@ -26,6 +28,21 @@ export class AdvisoryDate {
 
   @Column()
   date: string; // ISO 8601 date string, e.g., "2023-10-01T10:00:00Z"
+
+  @Column({ type: 'text', nullable: true })
+  notes: string;
+
+  @Column({ nullable: true })
+  session_link: string;
+
+  @Column({ nullable: true })
+  completed_at: Date;
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
 
   // One advisory date have only one advisory but an advisory can have many dates
   @ManyToOne(() => Advisory, (advisory) => advisory.advisory_dates)
