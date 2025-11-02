@@ -35,6 +35,7 @@ import { AdvisoryRequest } from './advisory-requests/entities/advisory-request.e
 import { NotificationPreferences } from './notifications/entities/notification-preferences.entity';
 import { NotificationLogs } from './notifications/entities/notification-logs.entity';
 import { EmailTemplates } from './notifications/entities/email-templates.entity';
+import { AdvisoryRequestModule } from './advisory-requests/advisory-request.module';
 
 @Module({
   imports: [
@@ -99,6 +100,7 @@ import { EmailTemplates } from './notifications/entities/email-templates.entity'
 
     // Nuevos módulos
     EmailModule,
+    AdvisoryRequestModule,
   ],
 })
 export class AppModule {}
