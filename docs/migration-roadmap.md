@@ -27,27 +27,27 @@ Este documento contiene el plan paso a paso para migrar el proyecto actual hacia
 ## 🎯 **FASE 1: Preparación y Base** (Estimado: 2-3 días)
 
 ### 1.1 Configuración Inicial
-- [ ] **1.1.1** Instalar dependencias adicionales necesarias
+- [x] **1.1.1** Instalar dependencias adicionales necesarias ✅
   ```bash
-  npm install @nestjs/cron @nestjs/bull bull redis
-  npm install nodemailer @types/nodemailer
-  npm install class-validator class-transformer
-  npm install moment date-fns
+  npm install @nestjs/schedule @nestjs/bull bull redis
+  npm install nodemailer @types/nodemailer moment date-fns
   ```
 
-- [ ] **1.1.2** Configurar variables de entorno para email
+- [x] **1.1.2** Configurar variables de entorno para email ✅
   ```env
-  # Agregar a .env.development
+  # Agregado a .env.development
   SMTP_HOST=smtp.gmail.com
   SMTP_PORT=587
   SMTP_USER=tu-email@gmail.com
   SMTP_PASS=tu-app-password
   FROM_EMAIL=noreply@universidad.edu.mx
   FROM_NAME=Sistema de Asesorías
+  REDIS_HOST=localhost
+  REDIS_PORT=6379
   ```
 
-- [ ] **1.1.3** Actualizar `env.validation.ts` con nuevas variables
-- [ ] **1.1.4** Configurar módulo de Bull Queue para emails asíncronos
+- [x] **1.1.3** Actualizar `env.validation.ts` con nuevas variables ✅
+- [x] **1.1.4** Configurar módulo de Bull Queue para emails asíncronos ✅
 
 ### 1.2 Actualización de Base de Datos
 - [ ] **1.2.1** Crear migración para nuevos campos en entidades existentes

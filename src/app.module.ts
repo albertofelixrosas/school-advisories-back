@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { ScheduleModule } from '@nestjs/schedule';
 import { join } from 'path';
 
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -28,6 +29,8 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { AdvisoryAttendanceModule } from './advisory-attendance/advisory-attendance.module';
 import { AdvisoryAttendance } from './advisory-attendance/entities/advisory-attendance.entity';
+import { QueueModule } from './queue/queue.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -36,6 +39,12 @@ import { AdvisoryAttendance } from './advisory-attendance/entities/advisory-atte
       validationSchema,
       envFilePath: [`.env.${process.env.NODE_ENV || 'development'}`],
     }),
+
+    // Configuración de Schedule para Cron Jobs
+    ScheduleModule.forRoot(),
+
+    // Configuración de Colas
+    QueueModule,
 
     TypeOrmModule.forRootAsync({
       imports: [
@@ -78,6 +87,9 @@ import { AdvisoryAttendance } from './advisory-attendance/entities/advisory-atte
     AdvisorySchedulesModule,
     AdvisoryAttendanceModule,
     VenuesModule,
+
+    // Nuevos módulos
+    EmailModule,
   ],
 })
 export class AppModule {}
