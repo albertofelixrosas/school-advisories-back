@@ -32,10 +32,12 @@ import { AdvisoryAttendance } from './advisory-attendance/entities/advisory-atte
 import { QueueModule } from './queue/queue.module';
 import { EmailModule } from './email/email.module';
 import { AdvisoryRequest } from './advisory-requests/entities/advisory-request.entity';
+import { StudentInvitation } from './advisories/entities/student-invitation.entity';
 import { NotificationPreferences } from './notifications/entities/notification-preferences.entity';
 import { NotificationLogs } from './notifications/entities/notification-logs.entity';
 import { EmailTemplates } from './notifications/entities/email-templates.entity';
 import { AdvisoryRequestModule } from './advisory-requests/advisory-request.module';
+import { StudentInvitationsModule } from './student-invitations/student-invitations.module';
 import { NotificationModule } from './notifications/notification.module';
 
 @Module({
@@ -81,6 +83,7 @@ import { NotificationModule } from './notifications/notification.module';
           Venue,
           // Nuevas entidades
           AdvisoryRequest,
+          StudentInvitation,
           NotificationPreferences,
           NotificationLogs,
           EmailTemplates,
@@ -102,6 +105,7 @@ import { NotificationModule } from './notifications/notification.module';
     // Nuevos módulos
     EmailModule,
     AdvisoryRequestModule,
+    StudentInvitationsModule,
     NotificationModule,
   ],
 })

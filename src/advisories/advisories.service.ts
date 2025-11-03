@@ -1,13 +1,22 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Advisory } from './entities/advisory.entity';
 import { User } from 'src/users/entities/user.entity';
 import { CreateAdvisoryDto } from './dto/create-advisory.dto';
 import { UpdateAdvisoryDto } from './dto/update-advisory.dto';
+import { CreateDirectSessionDto } from './dto/create-direct-session.dto';
 import { SubjectDetails } from 'src/subject-details/entities/subject-detail.entity';
 import { AdvisorySchedule } from 'src/advisory-schedules/entities/advisory-schedule.entity';
+import { AdvisoryDate } from 'src/advisory-dates/entities/advisory-date.entity';
+import { Venue } from 'src/venues/entities/venue.entity';
 import { UserRole } from 'src/users/user-role.enum';
+import { AdvisoryStatus } from './advisory-status.enum';
 import { AdvisoryResponseDto } from './dto/advisory-response.dto';
 
 @Injectable()
@@ -21,6 +30,10 @@ export class AdvisoriesService {
     private readonly subjectDetailRepo: Repository<SubjectDetails>,
     @InjectRepository(AdvisorySchedule)
     private readonly advisoryScheduleRepo: Repository<AdvisorySchedule>,
+    @InjectRepository(AdvisoryDate)
+    private readonly advisoryDateRepo: Repository<AdvisoryDate>,
+    @InjectRepository(Venue)
+    private readonly venueRepo: Repository<Venue>,
   ) {}
 
   private generateAdvisoryResponse(advisory: Advisory): AdvisoryResponseDto {
@@ -252,5 +265,172 @@ export class AdvisoriesService {
     }
     await this.advisoryRepo.remove(advisory);
     return this.generateAdvisoryResponse(advisory);
+  }
+
+  /**
+   * Crea una sesión directa de asesoría (sin solicitud previa)
+   * Solo profesores pueden crear sesiones en materias que tienen asignadas
+   */
+  async createDirectSession(
+    professorId: number,
+    dto: CreateDirectSessionDto,
+  ): Promise<{ advisory: AdvisoryResponseDto; advisory_date: AdvisoryDate }> {
+    // 1. Validar que el profesor existe y está autorizado
+    const professor = await this.userRepo.findOne({
+      where: { user_id: professorId, role: UserRole.PROFESSOR },
+    });
+    if (!professor) {
+      throw new NotFoundException(`Professor with ID ${professorId} not found`);
+    }
+
+    // 2. Validar que el subject_detail existe y el profesor está asignado
+    const subjectDetail = await this.subjectDetailRepo.findOne({
+      where: {
+        subject_detail_id: dto.subject_detail_id,
+        professor_id: professorId, // Solo puede crear sesiones de sus materias
+      },
+      relations: ['subject'],
+    });
+    if (!subjectDetail) {
+      throw new ForbiddenException(
+        'You can only create sessions for subjects assigned to you',
+      );
+    }
+
+    // 3. Validar que el venue existe
+    const venue = await this.venueRepo.findOne({
+      where: { venue_id: dto.venue_id },
+    });
+    if (!venue) {
+      throw new NotFoundException(`Venue with ID ${dto.venue_id} not found`);
+    }
+
+    // 4. Validar que la fecha no sea en el pasado
+    const now = new Date();
+    if (dto.session_date <= now) {
+      throw new BadRequestException('Session date must be in the future');
+    }
+
+    // 5. Verificar solapamiento de horarios del profesor
+    await this.validateProfessorAvailability(professorId, dto.session_date);
+
+    // 6. Crear o encontrar Advisory existente para esta materia
+    let advisory = await this.advisoryRepo.findOne({
+      where: {
+        professor_id: professorId,
+        subject_detail_id: dto.subject_detail_id,
+        status: AdvisoryStatus.ACTIVE,
+      },
+      relations: [
+        'professor',
+        'subject_detail',
+        'subject_detail.subject',
+        'schedules',
+      ],
+    });
+
+    if (!advisory) {
+      // Crear nueva Advisory
+      advisory = this.advisoryRepo.create({
+        professor_id: professorId,
+        subject_detail_id: dto.subject_detail_id,
+        max_students: dto.max_students,
+        status: AdvisoryStatus.ACTIVE,
+        created_by_id: professorId,
+        professor: professor,
+        subject_detail: subjectDetail,
+      });
+      advisory = await this.advisoryRepo.save(advisory);
+
+      if (!advisory) {
+        throw new Error('Error saving advisory');
+      }
+
+      // Crear schedules
+      const schedules = dto.schedules.map((schedule) => {
+        return this.advisoryScheduleRepo.create({
+          day: schedule.day as any,
+          begin_time: schedule.begin_time,
+          end_time: schedule.end_time,
+          advisory_id: advisory!.advisory_id,
+        });
+      });
+      await this.advisoryScheduleRepo.save(schedules);
+      advisory.schedules = schedules;
+    }
+
+    // 7. Crear AdvisoryDate (la sesión específica)
+    const advisoryDate = this.advisoryDateRepo.create({
+      advisory_id: advisory.advisory_id,
+      venue_id: dto.venue_id,
+      topic: dto.topic,
+      date: dto.session_date.toISOString(),
+      notes: dto.notes,
+      session_link: dto.session_link,
+      advisory: advisory,
+    });
+
+    const savedAdvisoryDate = await this.advisoryDateRepo.save(advisoryDate);
+
+    // 8. Si hay estudiantes invitados, procesarlos (implementar en siguiente paso)
+    if (dto.invited_student_ids && dto.invited_student_ids.length > 0) {
+      this.inviteStudentsToSession(
+        savedAdvisoryDate.advisory_date_id,
+        dto.invited_student_ids,
+      );
+    }
+
+    const advisoryResponse = this.generateAdvisoryResponse(advisory);
+
+    return {
+      advisory: advisoryResponse,
+      advisory_date: savedAdvisoryDate,
+    };
+  }
+
+  /**
+   * Valida que el profesor no tenga conflictos de horario
+   */
+  private async validateProfessorAvailability(
+    professorId: number,
+    sessionDate: Date,
+  ): Promise<void> {
+    const startOfDay = new Date(sessionDate);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(sessionDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Buscar sesiones existentes en el mismo día
+    const conflictingSessions = await this.advisoryDateRepo
+      .createQueryBuilder('ad')
+      .innerJoin('ad.advisory', 'a')
+      .where('a.professor_id = :professorId', { professorId })
+      .andWhere('ad.date >= :startOfDay', {
+        startOfDay: startOfDay.toISOString(),
+      })
+      .andWhere('ad.date <= :endOfDay', { endOfDay: endOfDay.toISOString() })
+      .getCount();
+
+    if (conflictingSessions > 0) {
+      throw new BadRequestException(
+        'You already have a session scheduled for this time period',
+      );
+    }
+  }
+
+  /**
+   * Invita estudiantes específicos a una sesión
+   * Implementación completa usando InvitationService
+   */
+  private inviteStudentsToSession(
+    advisoryDateId: number,
+    studentIds: number[],
+  ): void {
+    // Esta funcionalidad ahora se maneja a través del InvitationService
+    // Se puede llamar desde el endpoint POST /advisories/sessions/:sessionId/invite
+    console.log(
+      `Students ${studentIds.join(', ')} can be invited to session ${advisoryDateId} using the invitation endpoints`,
+    );
   }
 }

@@ -29,4 +29,7 @@ export class AdvisoryAttendance {
 
   @Column({ default: false })
   attended: boolean;
+
+  @Column({ type: 'text', nullable: true })
+  notes: string;
 }

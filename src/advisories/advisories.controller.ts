@@ -9,10 +9,14 @@ import {
   ParseIntPipe,
   UseGuards,
   NotFoundException,
+  Request,
 } from '@nestjs/common';
 import { AdvisoriesService } from './advisories.service';
 import { CreateAdvisoryDto } from './dto/create-advisory.dto';
 import { UpdateAdvisoryDto } from './dto/update-advisory.dto';
+import { CreateDirectSessionDto } from './dto/create-direct-session.dto';
+import { InviteStudentsDto, RespondInvitationDto } from './dto/invitation.dto';
+import { InvitationService } from './services/invitation.service';
 import {
   ApiTags,
   ApiOperation,
@@ -32,7 +36,10 @@ import { UserRole } from 'src/users/user-role.enum';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('advisories')
 export class AdvisoriesController {
-  constructor(private readonly advisoriesService: AdvisoriesService) {}
+  constructor(
+    private readonly advisoriesService: AdvisoriesService,
+    private readonly invitationService: InvitationService,
+  ) {}
 
   @Post()
   @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
@@ -248,6 +255,121 @@ export class AdvisoriesController {
         message: 'Error interno del servidor al eliminar la asesoría',
         error: 'Internal Server Error',
       };
+    }
+  }
+
+  @Post('direct-session')
+  @Roles(UserRole.PROFESSOR)
+  @ApiOperation({
+    summary: 'Crear sesión directa de asesoría',
+    description:
+      'Permite a un profesor crear una sesión de asesoría directamente sin solicitud previa',
+  })
+  @ApiCreatedResponse({
+    description: 'Sesión de asesoría creada exitosamente',
+    schema: {
+      type: 'object',
+      properties: {
+        advisory: { type: 'object' },
+        advisory_date: { type: 'object' },
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Datos inválidos o conflicto de horario',
+  })
+  @ApiNotFoundResponse({
+    description: 'Materia, venue o profesor no encontrado',
+  })
+  async createDirectSession(
+    @Request() req: any,
+    @Body() dto: CreateDirectSessionDto,
+  ) {
+    try {
+      const professorId = req.user.userId; // Obtenido del JWT
+      console.log(
+        'Crear sesión directa por profesor:',
+        professorId,
+        'con datos:',
+        dto,
+      );
+
+      return await this.advisoriesService.createDirectSession(professorId, dto);
+    } catch (error) {
+      console.error('Error al crear sesión directa:', error);
+
+      if (error instanceof NotFoundException) {
+        return {
+          statusCode: 404,
+          message: error.message,
+          error: 'Not Found',
+        };
+      }
+
+      return {
+        statusCode: 400,
+        message:
+          error instanceof Error ? error.message : 'Error al crear la sesión',
+        error: 'Bad Request',
+      };
+    }
+  }
+
+  @Post('sessions/:sessionId/invite')
+  @Roles(UserRole.PROFESSOR)
+  @ApiOperation({
+    summary: 'Invitar estudiantes a sesión',
+    description:
+      'Permite al profesor invitar estudiantes específicos a su sesión de asesoría',
+  })
+  @ApiCreatedResponse({ description: 'Invitaciones enviadas exitosamente' })
+  @ApiBadRequestResponse({
+    description: 'Datos inválidos o estudiantes no encontrados',
+  })
+  @ApiNotFoundResponse({ description: 'Sesión no encontrada' })
+  async inviteStudentsToSession(
+    @Param('sessionId', ParseIntPipe) sessionId: number,
+    @Body() dto: InviteStudentsDto,
+    @Request() req: any,
+  ) {
+    try {
+      const professorId = req.user.userId;
+      return await this.invitationService.inviteStudentsToSession(
+        sessionId,
+        dto,
+        professorId,
+      );
+    } catch (error) {
+      console.error('Error al invitar estudiantes:', error);
+      throw error;
+    }
+  }
+
+  @Get('sessions/:sessionId/invitations')
+  @Roles(UserRole.PROFESSOR, UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Ver invitaciones de sesión',
+    description: 'Obtiene todas las invitaciones de una sesión específica',
+  })
+  @ApiOkResponse({ description: 'Invitaciones obtenidas exitosamente' })
+  async getSessionInvitations(
+    @Param('sessionId', ParseIntPipe) sessionId: number,
+    @Request() req: any,
+  ) {
+    try {
+      const userId = req.user.userId;
+      const userRole = req.user.role;
+
+      // Solo profesores necesitan validación de autorización
+      const professorId = userRole === UserRole.PROFESSOR ? userId : undefined;
+
+      return await this.invitationService.getSessionInvitations(
+        sessionId,
+        professorId,
+      );
+    } catch (error) {
+      console.error('Error al obtener invitaciones:', error);
+      throw error;
     }
   }
 }
