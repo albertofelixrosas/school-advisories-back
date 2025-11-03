@@ -14,6 +14,7 @@ import { UserRole } from '../users/user-role.enum';
 import { SubjectDetails } from '../subject-details/entities/subject-detail.entity';
 import { User } from '../users/entities/user.entity';
 import { NotificationService } from '../notifications/notification.service';
+import { ProfessorAvailabilityService } from '../professor-availability/professor-availability.service';
 
 @Injectable()
 export class AdvisoryRequestService {
@@ -25,6 +26,7 @@ export class AdvisoryRequestService {
     @InjectRepository(User)
     private usersRepo: Repository<User>,
     private notificationService: NotificationService,
+    private availabilityService: ProfessorAvailabilityService,
   ) {}
 
   async createRequest(
@@ -321,5 +323,129 @@ export class AdvisoryRequestService {
     }
 
     return request;
+  }
+
+  /**
+   * Obtiene horarios disponibles para una materia específica
+   */
+  async getAvailableSchedulesForSubject(
+    subjectDetailId: number,
+    dateFrom?: Date,
+    dateTo?: Date,
+  ): Promise<{
+    subject_detail: {
+      subject_detail_id: number;
+      subject_name: string;
+      professor: {
+        user_id: number;
+        name: string;
+        last_name: string;
+      };
+    };
+    available_dates: Array<{
+      date: string;
+      slots: Array<{
+        availability_id: number;
+        start_time: string;
+        end_time: string;
+        available_spots: number;
+        max_students: number;
+      }>;
+    }>;
+  }> {
+    // Obtener información de la materia y profesor
+    const subjectDetail = await this.subjectDetailsRepo.findOne({
+      where: { subject_detail_id: subjectDetailId },
+      relations: ['subject', 'professor'],
+    });
+
+    if (!subjectDetail) {
+      throw new NotFoundException(
+        `Subject detail with ID ${subjectDetailId} not found`,
+      );
+    }
+
+    // Obtener disponibilidad del profesor para esta materia
+    const availability = await this.availabilityService.getAvailability({
+      professor_id: subjectDetail.professor_id,
+      subject_detail_id: subjectDetailId,
+    });
+
+    // Generar fechas disponibles en el rango especificado
+    const startDate = dateFrom || new Date();
+    const endDate = dateTo || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 días por defecto
+
+    const availableDates: Array<{
+      date: string;
+      slots: Array<{
+        availability_id: number;
+        start_time: string;
+        end_time: string;
+        available_spots: number;
+        max_students: number;
+      }>;
+    }> = [];
+
+    // Iterar por cada día en el rango
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      const daySlots = await Promise.all(
+        availability
+          .filter((slot) =>
+            this.matchesDayOfWeek(currentDate, slot.day_of_week),
+          )
+          .map(async (slot) => {
+            const availableSlots =
+              await this.availabilityService.getAvailableSlots(
+                subjectDetail.professor_id,
+                subjectDetailId,
+                currentDate,
+              );
+
+            return availableSlots.slots.find(
+              (availableSlot) =>
+                availableSlot.availability_id === slot.availability_id,
+            );
+          }),
+      );
+
+      const validSlots = daySlots.filter((slot) => slot !== undefined);
+
+      if (validSlots.length > 0) {
+        availableDates.push({
+          date: currentDate.toISOString().split('T')[0],
+          slots: validSlots,
+        });
+      }
+
+      // Avanzar al siguiente día
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return {
+      subject_detail: {
+        subject_detail_id: subjectDetail.subject_detail_id,
+        subject_name: subjectDetail.subject.subject,
+        professor: {
+          user_id: subjectDetail.professor.user_id,
+          name: subjectDetail.professor.name,
+          last_name: subjectDetail.professor.last_name,
+        },
+      },
+      available_dates: availableDates,
+    };
+  }
+
+  private matchesDayOfWeek(date: Date, dayOfWeek: string): boolean {
+    const dayNames = [
+      'SUNDAY',
+      'MONDAY',
+      'TUESDAY',
+      'WEDNESDAY',
+      'THURSDAY',
+      'FRIDAY',
+      'SATURDAY',
+    ];
+    return dayNames[date.getDay()] === dayOfWeek;
   }
 }

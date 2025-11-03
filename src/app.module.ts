@@ -39,6 +39,8 @@ import { EmailTemplates } from './notifications/entities/email-templates.entity'
 import { AdvisoryRequestModule } from './advisory-requests/advisory-request.module';
 import { StudentInvitationsModule } from './student-invitations/student-invitations.module';
 import { NotificationModule } from './notifications/notification.module';
+import { ProfessorAvailabilityModule } from './professor-availability/professor-availability.module';
+import { ProfessorAvailability } from './professor-availability/entities/professor-availability.entity';
 
 @Module({
   imports: [
@@ -87,6 +89,7 @@ import { NotificationModule } from './notifications/notification.module';
           NotificationPreferences,
           NotificationLogs,
           EmailTemplates,
+          ProfessorAvailability,
         ],
         synchronize: true, // solo para desarrollo
       }),
@@ -107,6 +110,7 @@ import { NotificationModule } from './notifications/notification.module';
     AdvisoryRequestModule,
     StudentInvitationsModule,
     NotificationModule,
+    ProfessorAvailabilityModule,
   ],
 })
 export class AppModule {}

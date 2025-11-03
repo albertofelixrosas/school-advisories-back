@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -16,6 +17,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { AdvisoryRequestService } from './advisory-request.service';
 import { CreateAdvisoryRequestDto } from './dto/create-advisory-request.dto';
@@ -219,5 +221,48 @@ export class AdvisoryRequestController {
     @Request() req: RequestWithUser,
   ): Promise<AdvisoryRequestResponseDto> {
     return this.advisoryRequestService.cancelRequest(id, req.user.user_id);
+  }
+
+  @Get('available-schedules/:subjectDetailId')
+  @Roles(UserRole.STUDENT)
+  @ApiOperation({
+    summary: 'Obtener horarios disponibles para una materia',
+    description:
+      'Consulta los horarios disponibles de un profesor para una materia específica',
+  })
+  @ApiParam({
+    name: 'subjectDetailId',
+    description: 'ID del detalle de materia',
+    type: 'number',
+  })
+  @ApiQuery({
+    name: 'dateFrom',
+    required: false,
+    type: 'string',
+    description: 'Fecha inicio (YYYY-MM-DD)',
+  })
+  @ApiQuery({
+    name: 'dateTo',
+    required: false,
+    type: 'string',
+    description: 'Fecha fin (YYYY-MM-DD)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Horarios disponibles obtenidos exitosamente',
+  })
+  async getAvailableSchedules(
+    @Param('subjectDetailId', ParseIntPipe) subjectDetailId: number,
+    @Query('dateFrom') dateFromString?: string,
+    @Query('dateTo') dateToString?: string,
+  ) {
+    const dateFrom = dateFromString ? new Date(dateFromString) : undefined;
+    const dateTo = dateToString ? new Date(dateToString) : undefined;
+
+    return this.advisoryRequestService.getAvailableSchedulesForSubject(
+      subjectDetailId,
+      dateFrom,
+      dateTo,
+    );
   }
 }
