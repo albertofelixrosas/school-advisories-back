@@ -13,6 +13,7 @@ import { RequestStatus } from './request-status.enum';
 import { UserRole } from '../users/user-role.enum';
 import { SubjectDetails } from '../subject-details/entities/subject-detail.entity';
 import { User } from '../users/entities/user.entity';
+import { NotificationService } from '../notifications/notification.service';
 
 @Injectable()
 export class AdvisoryRequestService {
@@ -23,6 +24,7 @@ export class AdvisoryRequestService {
     private subjectDetailsRepo: Repository<SubjectDetails>,
     @InjectRepository(User)
     private usersRepo: Repository<User>,
+    private notificationService: NotificationService,
   ) {}
 
   async createRequest(
@@ -73,8 +75,17 @@ export class AdvisoryRequestService {
 
     const savedRequest = await this.requestsRepo.save(newRequest);
 
-    // TODO: Enviar notificación por email al profesor
-    // await this.notificationService.notifyNewRequest(savedRequest);
+    // Enviar notificación por email al profesor
+    try {
+      await this.notificationService.notifyAdvisoryRequestCreated(
+        savedRequest,
+        subjectDetail.professor,
+        student,
+      );
+    } catch (error) {
+      // Log error but don't fail the request creation
+      console.error('Failed to send notification:', error);
+    }
 
     return this.findOneWithRelations(savedRequest.request_id);
   }
@@ -156,8 +167,17 @@ export class AdvisoryRequestService {
     //   await this.advisoryService.createSessionFromRequest(updatedRequest, approvalDto.proposed_date);
     // }
 
-    // TODO: Enviar notificación por email al estudiante
-    // await this.notificationService.notifyRequestApproved(updatedRequest);
+    // Enviar notificación por email al estudiante
+    try {
+      await this.notificationService.notifyAdvisoryRequestApproved(
+        updatedRequest,
+        request.professor,
+        request.student,
+      );
+    } catch (error) {
+      // Log error but don't fail the approval
+      console.error('Failed to send approval notification:', error);
+    }
 
     return this.findOneWithRelations(updatedRequest.request_id);
   }
@@ -183,8 +203,17 @@ export class AdvisoryRequestService {
 
     const updatedRequest = await this.requestsRepo.save(request);
 
-    // TODO: Enviar notificación por email al estudiante
-    // await this.notificationService.notifyRequestRejected(updatedRequest);
+    // Enviar notificación por email al estudiante
+    try {
+      await this.notificationService.notifyAdvisoryRequestRejected(
+        updatedRequest,
+        request.professor,
+        request.student,
+      );
+    } catch (error) {
+      // Log error but don't fail the rejection
+      console.error('Failed to send rejection notification:', error);
+    }
 
     return this.findOneWithRelations(updatedRequest.request_id);
   }
@@ -224,8 +253,29 @@ export class AdvisoryRequestService {
 
     const updatedRequest = await this.requestsRepo.save(request);
 
-    // TODO: Enviar notificaciones
-    // await this.notificationService.notifyRequestCancelled(updatedRequest);
+    // Enviar notificaciones a la parte contraria (si canceló el estudiante, notificar al profesor y viceversa)
+    try {
+      const cancelledBy = await this.usersRepo.findOne({
+        where: { user_id: userId },
+      });
+
+      if (!cancelledBy) {
+        throw new Error('User not found');
+      }
+
+      // Determinar quién debe recibir la notificación
+      const recipient =
+        userId === request.student_id ? request.professor : request.student;
+
+      await this.notificationService.notifyAdvisoryCancelled(
+        updatedRequest,
+        cancelledBy,
+        recipient,
+      );
+    } catch (error) {
+      // Log error but don't fail the cancellation
+      console.error('Failed to send cancellation notification:', error);
+    }
 
     return this.findOneWithRelations(updatedRequest.request_id);
   }

@@ -5,9 +5,13 @@ import { AdvisoryRequestController } from './advisory-request.controller';
 import { AdvisoryRequest } from './entities/advisory-request.entity';
 import { SubjectDetails } from '../subject-details/entities/subject-detail.entity';
 import { User } from '../users/entities/user.entity';
+import { NotificationModule } from '../notifications/notification.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AdvisoryRequest, SubjectDetails, User])],
+  imports: [
+    TypeOrmModule.forFeature([AdvisoryRequest, SubjectDetails, User]),
+    NotificationModule,
+  ],
   controllers: [AdvisoryRequestController],
   providers: [AdvisoryRequestService],
   exports: [AdvisoryRequestService],

@@ -36,6 +36,7 @@ import { NotificationPreferences } from './notifications/entities/notification-p
 import { NotificationLogs } from './notifications/entities/notification-logs.entity';
 import { EmailTemplates } from './notifications/entities/email-templates.entity';
 import { AdvisoryRequestModule } from './advisory-requests/advisory-request.module';
+import { NotificationModule } from './notifications/notification.module';
 
 @Module({
   imports: [
@@ -101,6 +102,7 @@ import { AdvisoryRequestModule } from './advisory-requests/advisory-request.modu
     // Nuevos módulos
     EmailModule,
     AdvisoryRequestModule,
+    NotificationModule,
   ],
 })
 export class AppModule {}
