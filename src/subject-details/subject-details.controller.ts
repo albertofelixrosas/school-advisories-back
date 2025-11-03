@@ -11,6 +11,8 @@ import {
 import { SubjectDetailsService } from './subject-details.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { UserRole } from '../users/user-role.enum';
 import {
   ApiBearerAuth,
   ApiTags,
@@ -117,6 +119,111 @@ export class SubjectDetailsController {
   @ApiResponse({ status: 404, description: 'Professor not found' })
   async findByProfessor(@Param('professorId') professorId: string) {
     return this.service.findByProfessor(+professorId);
+  }
+
+  @Post('assign/:professorId/:subjectId')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Assign professor to subject (Admin only)' })
+  @ApiResponse({ status: 201, description: 'Professor assigned successfully' })
+  @ApiResponse({
+    status: 400,
+    description: 'Professor already assigned or validation error',
+  })
+  @ApiResponse({ status: 404, description: 'Professor or subject not found' })
+  async assignProfessorToSubject(
+    @Param('professorId') professorId: string,
+    @Param('subjectId') subjectId: string,
+  ) {
+    return this.service.assignProfessorToSubject(+professorId, +subjectId);
+  }
+
+  @Get('subject/:subjectId/professors')
+  @ApiOperation({ summary: 'Get all professors assigned to a subject' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of professors assigned to the subject',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          assignment_id: { type: 'number' },
+          professor: {
+            type: 'object',
+            properties: {
+              user_id: { type: 'number' },
+              name: { type: 'string' },
+              last_name: { type: 'string' },
+              email: { type: 'string' },
+            },
+          },
+          assignmentDetails: {
+            type: 'object',
+            properties: {
+              assignment_id: { type: 'number' },
+              active_advisories: { type: 'number' },
+            },
+          },
+        },
+      },
+    },
+  })
+  async getSubjectProfessors(@Param('subjectId') subjectId: string) {
+    return this.service.getSubjectProfessors(+subjectId);
+  }
+
+  @Get('admin/assignments/stats')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Get assignment statistics by subject (Admin only)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Assignment statistics for all subjects',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          subject: {
+            type: 'object',
+            properties: {
+              subject_id: { type: 'number' },
+              subject: { type: 'string' },
+            },
+          },
+          professors_count: { type: 'number' },
+          active_advisories_count: { type: 'number' },
+          total_students_served: { type: 'number' },
+        },
+      },
+    },
+  })
+  async getAssignmentStats() {
+    return this.service.getAssignmentStatsBySubject();
+  }
+
+  @Get('check/:professorId/:subjectId')
+  @ApiOperation({ summary: 'Check if professor is assigned to subject' })
+  @ApiResponse({
+    status: 200,
+    description: 'Assignment status',
+    schema: {
+      type: 'object',
+      properties: {
+        isAssigned: { type: 'boolean' },
+      },
+    },
+  })
+  async checkAssignment(
+    @Param('professorId') professorId: string,
+    @Param('subjectId') subjectId: string,
+  ) {
+    const isAssigned = await this.service.isProfessorAssignedToSubject(
+      +professorId,
+      +subjectId,
+    );
+    return { isAssigned };
   }
 
   @Delete(':id')

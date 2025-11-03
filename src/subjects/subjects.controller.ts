@@ -66,6 +66,20 @@ export class SubjectsController {
     return this.subjectsService.findAll();
   }
 
+  @Get('admin/stats')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Obtener estadísticas de materias',
+    description:
+      'Obtiene estadísticas detalladas de materias con conteo de asignaciones y profesores. Solo para administradores.',
+  })
+  @ApiOkResponse({
+    description: 'Estadísticas de materias obtenidas exitosamente',
+  })
+  getSubjectsWithStats() {
+    return this.subjectsService.findAllWithStats();
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Obtener una materia por ID',

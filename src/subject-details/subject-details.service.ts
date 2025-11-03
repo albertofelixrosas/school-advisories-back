@@ -171,7 +171,176 @@ export class SubjectDetailsService {
     return subjectDetails;
   }
 
-  remove(id: number) {
-    return this.detailsRepo.delete(id);
+  async remove(id: number): Promise<void> {
+    const assignment = await this.detailsRepo.findOne({
+      where: { subject_detail_id: id },
+      relations: ['advisories'],
+    });
+
+    if (!assignment) {
+      throw new NotFoundException(`Assignment with ID ${id} not found`);
+    }
+
+    // Verificar que no tenga asesorías activas
+    if (assignment.advisories && assignment.advisories.length > 0) {
+      throw new BadRequestException(
+        `Cannot remove assignment because it has ${assignment.advisories.length} active advisories`,
+      );
+    }
+
+    await this.detailsRepo.delete(id);
+  }
+
+  /**
+   * Asigna un profesor a una materia
+   */
+  async assignProfessorToSubject(
+    professorId: number,
+    subjectId: number,
+  ): Promise<SubjectDetails> {
+    // Verificar que el profesor existe y es profesor
+    const professor = await this.userRepo.findOne({
+      where: { user_id: professorId, role: UserRole.PROFESSOR },
+    });
+    if (!professor) {
+      throw new NotFoundException(`Professor with ID ${professorId} not found`);
+    }
+
+    // Verificar que la materia existe
+    const subject = await this.subjectRepo.findOne({
+      where: { subject_id: subjectId },
+    });
+    if (!subject) {
+      throw new NotFoundException(`Subject with ID ${subjectId} not found`);
+    }
+
+    // Verificar que no existe ya esta asignación
+    const existingAssignment = await this.detailsRepo.findOne({
+      where: { professor_id: professorId, subject_id: subjectId },
+    });
+    if (existingAssignment) {
+      throw new BadRequestException(
+        `Professor ${professor.name} ${professor.last_name} is already assigned to subject "${subject.subject}"`,
+      );
+    }
+
+    // Crear la asignación
+    const assignment = this.detailsRepo.create({
+      professor_id: professorId,
+      subject_id: subjectId,
+      professor,
+      subject,
+    });
+
+    return await this.detailsRepo.save(assignment);
+  }
+
+  /**
+   * Remueve asignación de profesor a materia
+   */
+  async removeAssignment(assignmentId: number): Promise<void> {
+    return this.remove(assignmentId);
+  }
+
+  /**
+   * Obtiene todas las materias asignadas a un profesor
+   */
+  async getProfessorSubjects(professorId: number): Promise<SubjectDetails[]> {
+    return this.findByProfessor(professorId);
+  }
+
+  /**
+   * Obtiene todos los profesores asignados a una materia
+   */
+  async getSubjectProfessors(subjectId: number): Promise<
+    Array<{
+      assignment_id: number;
+      professor: {
+        user_id: number;
+        name: string;
+        last_name: string;
+        email: string;
+      };
+      assignmentDetails: {
+        assignment_id: number;
+        active_advisories: number;
+      };
+    }>
+  > {
+    const assignments = await this.detailsRepo.find({
+      where: { subject_id: subjectId },
+      relations: ['professor', 'advisories'],
+      order: { subject_detail_id: 'DESC' },
+    });
+
+    return assignments.map((assignment) => ({
+      assignment_id: assignment.subject_detail_id,
+      professor: {
+        user_id: assignment.professor.user_id,
+        name: assignment.professor.name,
+        last_name: assignment.professor.last_name,
+        email: assignment.professor.email,
+      },
+      assignmentDetails: {
+        assignment_id: assignment.subject_detail_id,
+        active_advisories: assignment.advisories?.length || 0,
+      },
+    }));
+  }
+
+  /**
+   * Verifica si un profesor está asignado a una materia específica
+   */
+  async isProfessorAssignedToSubject(
+    professorId: number,
+    subjectId: number,
+  ): Promise<boolean> {
+    const assignment = await this.detailsRepo.findOne({
+      where: { professor_id: professorId, subject_id: subjectId },
+    });
+
+    return !!assignment;
+  }
+
+  /**
+   * Obtiene estadísticas de asignaciones por materia
+   */
+  async getAssignmentStatsBySubject(): Promise<
+    Array<{
+      subject: {
+        subject_id: number;
+        subject: string;
+      };
+      professors_count: number;
+      active_advisories_count: number;
+      total_students_served: number;
+    }>
+  > {
+    const stats = await this.detailsRepo
+      .createQueryBuilder('sd')
+      .leftJoin('sd.subject', 'subject')
+      .leftJoin('sd.advisories', 'advisory')
+      .leftJoin('advisory.advisory_dates', 'dates')
+      .leftJoin('dates.attendances', 'attendance')
+      .select([
+        'subject.subject_id',
+        'subject.subject',
+        'COUNT(DISTINCT sd.professor_id) as professors_count',
+        'COUNT(DISTINCT advisory.advisory_id) as active_advisories_count',
+        'COUNT(DISTINCT attendance.student_id) as total_students_served',
+      ])
+      .groupBy('subject.subject_id')
+      .orderBy('subject.subject', 'ASC')
+      .getRawMany();
+
+    return stats.map((stat) => ({
+      subject: {
+        subject_id: parseInt(stat.subject_id),
+        subject: stat.subject_subject,
+      },
+      professors_count: parseInt(stat.professors_count) || 0,
+      active_advisories_count: parseInt(stat.active_advisories_count) || 0,
+      total_students_served: parseInt(stat.total_students_served) || 0,
+    }));
   }
 }
