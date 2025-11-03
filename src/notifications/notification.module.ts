@@ -10,6 +10,7 @@ import { EmailTemplates } from './entities/email-templates.entity';
 import { NotificationLogs } from './entities/notification-logs.entity';
 import { NotificationPreferences } from './entities/notification-preferences.entity';
 import { User } from '../users/entities/user.entity';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { User } from '../users/entities/user.entity';
     BullModule.registerQueue({
       name: 'notification-email',
     }),
+    EmailModule,
   ],
   providers: [
     NotificationService,

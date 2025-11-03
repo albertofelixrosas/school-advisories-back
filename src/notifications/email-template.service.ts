@@ -33,7 +33,6 @@ export class EmailTemplateService {
     // Función simple para reemplazar variables en formato {{variable}}
     const replaceVariables = (text: string): string => {
       return text.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         const value = variables[key];
         return value !== undefined ? String(value) : match;
       });
@@ -48,13 +47,13 @@ export class EmailTemplateService {
     };
   }
 
-  async getAllTemplates(): Promise<EmailTemplates[]> {
+  getAllTemplates(): Promise<EmailTemplates[]> {
     return this.templatesRepo.find({
       order: { template_key: 'ASC' },
     });
   }
 
-  async createTemplate(templateData: {
+  createTemplate(templateData: {
     template_key: string;
     template_name: string;
     subject: string;
@@ -87,6 +86,26 @@ export class EmailTemplateService {
   async deleteTemplate(key: string): Promise<void> {
     const template = await this.getTemplate(key);
     await this.templatesRepo.remove(template);
+  }
+
+  /**
+   * Envía email usando una plantilla con variables
+   */
+  async sendTemplatedEmail(
+    templateKey: string,
+    to: string,
+    variables: Record<string, any>,
+  ): Promise<boolean> {
+    try {
+      const template = await this.getTemplate(templateKey);
+      this.renderTemplate(template, variables);
+
+      // Aquí necesitaríamos inyectar EmailService, pero para evitar dependencia circular
+      // vamos a devolver falso por ahora y usar este método desde el EmailService
+      return false; // Placeholder - implementar integración correcta
+    } catch {
+      return false;
+    }
   }
 
   async initializeDefaultTemplates(): Promise<void> {
