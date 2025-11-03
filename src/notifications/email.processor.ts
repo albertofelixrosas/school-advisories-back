@@ -14,7 +14,7 @@ interface EmailJobData {
   notificationId: number;
 }
 
-@Processor('email')
+@Processor('notification-email')
 @Injectable()
 export class EmailProcessor {
   private readonly logger = new Logger(EmailProcessor.name);
@@ -40,7 +40,7 @@ export class EmailProcessor {
     });
   }
 
-  @Process('send-email')
+  @Process('send-notification-email')
   async handleSendEmail(job: Job<EmailJobData>): Promise<void> {
     const { to, subject, html, text, notificationId } = job.data;
 

@@ -20,7 +20,7 @@ import { User } from '../users/entities/user.entity';
       User,
     ]),
     BullModule.registerQueue({
-      name: 'email',
+      name: 'notification-email',
     }),
   ],
   providers: [

@@ -44,7 +44,7 @@ export class NotificationService {
     private notificationPrefsRepo: Repository<NotificationPreferences>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
-    @InjectQueue('email') private emailQueue: Queue,
+    @InjectQueue('notification-email') private emailQueue: Queue,
     private emailTemplateService: EmailTemplateService,
   ) {}
 
@@ -119,7 +119,7 @@ export class NotificationService {
     );
 
     // Agregar el email a la cola para procesamiento asíncrono
-    await this.emailQueue.add('send-email', {
+    await this.emailQueue.add('send-notification-email', {
       to: recipient.email,
       subject: renderedTemplate.subject,
       html: renderedTemplate.html,
