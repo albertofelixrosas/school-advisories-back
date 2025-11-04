@@ -1,4 +1,4 @@
-@startuml School Advisories - Entity Relationship Diagram
+@startuml School Advisories - Entity Relationship Diagram (ACTUALIZADO)
 
 !define ENTITY class
 !define ENUM enum
@@ -26,6 +26,41 @@ ENUM WeekDay {
   SUNDAY
 }
 
+ENUM RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+ENUM AdvisoryStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+ENUM InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+ENUM NotificationType {
+  EMAIL
+  SMS
+  PUSH
+}
+
+ENUM NotificationEvent {
+  ADVISORY_REQUEST_NEW
+  ADVISORY_REQUEST_APPROVED
+  ADVISORY_REQUEST_REJECTED
+  ADVISORY_CANCELLED
+  REMINDER_DAILY
+}
+
 ' ===== MAIN ENTITIES =====
 ENTITY User {
   + user_id : number <<PK>>
@@ -41,6 +76,10 @@ ENTITY User {
   student_id : string <<nullable>>
   employee_id : string <<nullable>>
   role : UserRole <<default: STUDENT>>
+  last_login_at : timestamp <<nullable>>
+  is_active : boolean <<default: true>>
+  created_at : timestamp
+  updated_at : timestamp
 }
 
 ENTITY Subject {
@@ -71,6 +110,11 @@ ENTITY Advisory {
   professor_id : number <<FK>>
   subject_detail_id : number <<FK>>
   max_students : number
+  status : AdvisoryStatus <<default: PENDING>>
+  created_by_id : number <<FK, nullable>>
+  cancelled_by_id : number <<FK, nullable>>
+  created_at : timestamp
+  updated_at : timestamp
 }
 
 ENTITY AdvisorySchedule {
@@ -80,6 +124,8 @@ ENTITY AdvisorySchedule {
   begin_time : time
   end_time : time
   advisory_id : number <<FK>>
+  max_students_per_slot : number <<default: 5>>
+  is_active : boolean <<default: true>>
 }
 
 ENTITY AdvisoryDate {
@@ -89,6 +135,11 @@ ENTITY AdvisoryDate {
   venue_id : number <<FK>>
   topic : string
   date : string
+  notes : string <<nullable>>
+  session_link : string <<nullable>>
+  completed_at : timestamp <<nullable>>
+  created_at : timestamp
+  updated_at : timestamp
 }
 
 ENTITY AdvisoryAttendance {
@@ -97,6 +148,10 @@ ENTITY AdvisoryAttendance {
   student_id : number <<FK>>
   advisory_date_id : number <<FK>>
   attended : boolean <<default: false>>
+  notes : string <<nullable>>
+  attendance_time : timestamp <<nullable>>
+  created_at : timestamp
+  updated_at : timestamp
 }
 
 ENTITY Venue {
@@ -117,6 +172,99 @@ ENTITY RefreshToken {
   expires_at : timestamp
 }
 
+' ===== NUEVAS ENTIDADES IMPLEMENTADAS =====
+
+ENTITY AdvisoryRequest {
+  + request_id : number <<PK>>
+  --
+  student_id : number <<FK>>
+  professor_id : number <<FK>>
+  subject_detail_id : number <<FK>>
+  status : RequestStatus <<default: PENDING>>
+  student_message : text <<nullable>>
+  professor_response : text <<nullable>>
+  processed_at : timestamp <<nullable>>
+  processed_by_id : number <<FK, nullable>>
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+ENTITY ProfessorAvailability {
+  + availability_id : number <<PK>>
+  --
+  professor_id : number <<FK>>
+  subject_detail_id : number <<FK, nullable>>
+  day_of_week : WeekDay
+  start_time : time
+  end_time : time
+  max_students_per_slot : number <<default: 5>>
+  slot_duration_minutes : number <<default: 30>>
+  is_active : boolean <<default: true>>
+  is_recurring : boolean <<default: false>>
+  effective_from : date <<nullable>>
+  effective_until : date <<nullable>>
+  notes : text <<nullable>>
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+ENTITY StudentInvitation {
+  + invitation_id : number <<PK>>
+  --
+  advisory_date_id : number <<FK>>
+  student_id : number <<FK>>
+  invited_by_id : number <<FK>>
+  status : InvitationStatus <<default: PENDING>>
+  invitation_message : text <<nullable>>
+  response_message : text <<nullable>>
+  responded_at : timestamp <<nullable>>
+  expires_at : timestamp <<nullable>>
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+ENTITY NotificationPreferences {
+  + preference_id : number <<PK>>
+  --
+  user_id : number <<FK>>
+  email_new_request : boolean <<default: true>>
+  email_request_approved : boolean <<default: true>>
+  email_request_rejected : boolean <<default: true>>
+  email_advisory_cancelled : boolean <<default: true>>
+  email_daily_reminders : boolean <<default: true>>
+  email_session_reminders : boolean <<default: true>>
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+ENTITY NotificationLogs {
+  + log_id : number <<PK>>
+  --
+  user_id : number <<FK>>
+  notification_type : string
+  subject : string
+  content : text
+  sent_to : string
+  sent_successfully : boolean <<default: false>>
+  error_message : text <<nullable>>
+  sent_at : timestamp <<nullable>>
+  created_at : timestamp
+}
+
+ENTITY EmailTemplate {
+  + template_key : string <<PK>>
+  --
+  name : string
+  description : string <<nullable>>
+  subject : string
+  html_body : text
+  text_body : text <<nullable>>
+  available_variables : json <<nullable>>
+  is_active : boolean <<default: true>>
+  created_at : timestamp
+  updated_at : timestamp
+}
+
 ' ===== RELATIONSHIPS =====
 
 ' User relationships
@@ -124,6 +272,14 @@ User ||--o{ SubjectDetails : "professor teaches"
 User ||--o{ Advisory : "professor creates"
 User ||--o{ AdvisoryAttendance : "student attends"
 User ||--o{ RefreshToken : "has tokens"
+User ||--o{ AdvisoryRequest : "student requests (student_id)"
+User ||--o{ AdvisoryRequest : "professor receives (professor_id)"
+User ||--o{ AdvisoryRequest : "admin processes (processed_by_id)"
+User ||--o{ ProfessorAvailability : "professor sets availability"
+User ||--o{ StudentInvitation : "student receives invitation"
+User ||--o{ StudentInvitation : "professor sends invitation (invited_by_id)"
+User ||--o{ NotificationPreferences : "has preferences"
+User ||--o{ NotificationLogs : "receives notifications"
 
 ' Subject relationships  
 Subject ||--o{ SubjectDetails : "has details"
@@ -131,6 +287,8 @@ Subject ||--o{ SubjectDetails : "has details"
 ' SubjectDetails relationships
 SubjectDetails ||--o{ SubjectSchedule : "has schedules"
 SubjectDetails ||--o{ Advisory : "has advisories"
+SubjectDetails ||--o{ AdvisoryRequest : "requested for subject"
+SubjectDetails ||--o{ ProfessorAvailability : "availability for subject"
 
 ' Advisory relationships
 Advisory ||--o{ AdvisorySchedule : "has recurring schedule"
@@ -138,64 +296,116 @@ Advisory ||--o{ AdvisoryDate : "has specific dates"
 
 ' AdvisoryDate relationships
 AdvisoryDate ||--o{ AdvisoryAttendance : "tracks attendance"
+AdvisoryDate ||--o{ StudentInvitation : "has invitations"
 
 ' Venue relationships
 Venue ||--o{ AdvisoryDate : "hosts sessions"
 
 ' ===== RELATIONSHIP DETAILS =====
 note right of User
-  • Professor: Can teach multiple subjects (SubjectDetails)
-  • Professor: Can create multiple advisories  
-  • Student: Can attend multiple advisory sessions
-  • All roles: Can have multiple refresh tokens
+  ROLES Y FUNCIONALIDADES:
+  • Professor: Teaches subjects, creates advisories, sets availability
+  • Student: Requests advisories, attends sessions, gets invitations
+  • Admin: Manages system, processes requests, assigns subjects
+  • All roles: Have notification preferences and logs
 end note
 
-note right of SubjectDetails
-  Bridge between Subject and Professor
-  • One professor per subject detail
-  • One subject per subject detail
-  • Can have multiple schedules and advisories
+note right of AdvisoryRequest
+  FLUJO DE SOLICITUDES:
+  • Student creates request for specific subject/professor
+  • Professor receives notification and can approve/reject
+  • System automatically creates Advisory when approved
+  • Full audit trail with status changes
 end note
 
-note right of Advisory
-  • Created by one professor
-  • Related to one subject detail
-  • Has recurring schedule patterns
-  • Has specific session dates
+note right of ProfessorAvailability
+  SISTEMA DE DISPONIBILIDAD:
+  • Professors set recurring weekly availability
+  • Can specify subject-specific or general availability
+  • Configurable slots with duration and capacity
+  • Students see availability when requesting
 end note
 
-note right of AdvisoryDate
-  • Specific session instance
-  • Held at one venue
-  • Students register attendance
+note right of StudentInvitation
+  INVITACIONES DIRECTAS:
+  • Professors can invite specific students to sessions
+  • Students receive invitation and can accept/decline
+  • Invitations have expiry dates
+  • Status tracking for all invitations
 end note
 
-note bottom of AdvisoryAttendance
-  Junction table between Student and AdvisoryDate
-  Tracks actual attendance per session
+note bottom of NotificationLogs
+  SISTEMA DE NOTIFICACIONES:
+  • All notifications logged for audit
+  • Email templates configurable by admin
+  • User preferences control what notifications to receive
+  • Support for failed delivery tracking
 end note
 
-' ===== BUSINESS RULES =====
+' ===== BUSINESS RULES ACTUALIZADAS =====
 note top of SubjectDetails
-  BUSINESS RULES:
-  • A professor can teach multiple subjects
-  • A subject can be taught by multiple professors
-  • Each SubjectDetails represents a specific professor-subject assignment
+  REGLAS DE MATERIAS Y ASIGNACIONES:
+  • Admin gestiona asignaciones profesor-materia
+  • Validaciones de unicidad y permisos
+  • No eliminar materias con asignaciones activas
+  • Estadísticas administrativas disponibles
+end note
+
+note top of AdvisoryRequest
+  REGLAS DE SOLICITUDES:
+  • Estudiante solo puede solicitar materias existentes
+  • No solicitudes duplicadas PENDING para misma materia
+  • Solo profesor asignado puede aprobar/rechazar
+  • Notificaciones automáticas en cada cambio de estado
+end note
+
+note top of ProfessorAvailability
+  REGLAS DE DISPONIBILIDAD:
+  • Profesores definen horarios recurrentes semanales
+  • Disponibilidad puede ser general o por materia específica
+  • Slots configurables con duración y capacidad máxima
+  • Sistema valida solapamientos de horarios
 end note
 
 note top of Advisory
-  BUSINESS RULES:
-  • An advisory is tied to a specific SubjectDetails (professor + subject)
-  • Has a maximum student capacity (max_students)
-  • Can have recurring weekly schedules
-  • Can have specific session dates
+  REGLAS DE ASESORÍAS:
+  • Estados: PENDING → ACTIVE → COMPLETED/CANCELLED
+  • Capacidad máxima configurable por sesión
+  • Registro de asistencia masiva implementado
+  • Notas de sesión y links virtuales soportados
 end note
 
-note top of AdvisoryAttendance
-  BUSINESS RULES:
-  • Students register for specific advisory dates
-  • Attendance is tracked per session
-  • A student can attend multiple advisories
+note top of EmailTemplate
+  SISTEMA DE PLANTILLAS:
+  • Plantillas configurables por administrador
+  • Variables dinámicas para personalización
+  • Soporte HTML y texto plano
+  • Templates por tipo de evento del sistema
+end note
+
+' ===== ESTADO DE IMPLEMENTACIÓN =====
+note top
+  **DIAGRAMA ACTUALIZADO - NOVIEMBRE 2025**
+  
+  ✅ **ENTIDADES IMPLEMENTADAS COMPLETAMENTE:**
+  • User, Subject, SubjectDetails, Advisory, AdvisoryDate, AdvisoryAttendance
+  • AdvisoryRequest (Sistema de solicitudes)
+  • ProfessorAvailability (Disponibilidad recurrente)
+  • StudentInvitation (Invitaciones directas)
+  • NotificationPreferences, NotificationLogs, EmailTemplate (Sistema de notificaciones)
+  
+  📊 **FUNCIONALIDADES CORE IMPLEMENTADAS:**
+  • Flujo completo de solicitudes con notificaciones automáticas
+  • Gestión de disponibilidad recurrente de profesores
+  • Registro de asistencia masiva y gestión de sesiones
+  • Sistema completo de notificaciones por email
+  • Gestión administrativa de materias con validaciones
+  • Invitaciones directas de profesores a estudiantes
+  
+  ⚠️ **PENDIENTE:**
+  • Sistema de reportes y estadísticas (Fase 7)
+  • Testing comprehensivo (Fase 8)
+  • Optimizaciones de producción (Fase 9)
 end note
 
 @enduml
