@@ -7,6 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { validationSchema } from './env.validation';
+import { NodeEnv } from './common/node-env.enum';
 
 import { Subject } from './subjects/entities/subject.entity';
 import { Advisory } from './advisories/entities/advisory.entity';
@@ -47,7 +48,7 @@ import { ProfessorAvailability } from './professor-availability/entities/profess
     ConfigModule.forRoot({
       isGlobal: true, // hace que ConfigService esté disponible globalmente
       validationSchema,
-      envFilePath: [`.env.${process.env.NODE_ENV || 'development'}`],
+      envFilePath: [`.env.${process.env.NODE_ENV || NodeEnv.DEVELOPMENT}`],
     }),
 
     // Configuración de Schedule para Cron Jobs

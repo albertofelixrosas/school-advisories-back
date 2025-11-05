@@ -16,7 +16,7 @@ import { AdvisoriesService } from './advisories.service';
 import { CreateAdvisoryDto } from './dto/create-advisory.dto';
 import { UpdateAdvisoryDto } from './dto/update-advisory.dto';
 import { CreateDirectSessionDto } from './dto/create-direct-session.dto';
-import { InviteStudentsDto, RespondInvitationDto } from './dto/invitation.dto';
+import { InviteStudentsDto } from './dto/invitation.dto';
 import { InvitationService } from './services/invitation.service';
 import {
   ApiTags,
