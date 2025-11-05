@@ -11,6 +11,7 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
+import { RequestWithUser } from '../auth/types/request-with-user';
 import {
   ApiTags,
   ApiOperation,
@@ -54,10 +55,10 @@ export class ProfessorAvailabilityController {
   })
   async createSlot(
     @Body() dto: CreateAvailabilitySlotDto,
-    @Request() req: any,
+    @Request() req: RequestWithUser,
   ): Promise<AvailabilitySlotResponseDto> {
     // Asegurar que solo pueda crear disponibilidad para sí mismo
-    dto.professor_id = req.user.userId;
+    dto.professor_id = req.user.user_id;
     return await this.availabilityService.createAvailabilitySlot(dto);
   }
 
@@ -74,9 +75,9 @@ export class ProfessorAvailabilityController {
   })
   async createBulkSlots(
     @Body() dto: BulkAvailabilityDto,
-    @Request() req: any,
+    @Request() req: RequestWithUser,
   ): Promise<AvailabilitySlotResponseDto[]> {
-    dto.professor_id = req.user.userId;
+    dto.professor_id = req.user.user_id;
     return await this.availabilityService.createBulkAvailability(dto);
   }
 
@@ -131,11 +132,11 @@ export class ProfessorAvailabilityController {
   @ApiQuery({ name: 'date', required: false, type: 'string' })
   async getMyAvailability(
     @Query() query: Omit<GetAvailabilityQueryDto, 'professor_id'>,
-    @Request() req: any,
+    @Request() req: RequestWithUser,
   ): Promise<AvailabilitySlotResponseDto[]> {
     const fullQuery: GetAvailabilityQueryDto = {
       ...query,
-      professor_id: req.user.userId,
+      professor_id: req.user.user_id,
     };
     return await this.availabilityService.getAvailability(fullQuery);
   }
@@ -154,10 +155,10 @@ export class ProfessorAvailabilityController {
   async updateSlot(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateAvailabilitySlotDto,
-    @Request() req: any,
+    @Request() req: RequestWithUser,
   ): Promise<AvailabilitySlotResponseDto> {
     // Asegurar que solo pueda actualizar su propia disponibilidad
-    dto.professor_id = req.user.userId;
+    dto.professor_id = req.user.user_id;
     return await this.availabilityService.updateAvailabilitySlot(id, dto);
   }
 

@@ -10,6 +10,7 @@ import {
   Request,
   ParseIntPipe,
 } from '@nestjs/common';
+import { RequestWithUser } from '../auth/types/request-with-user';
 import { AdvisoryAttendanceService } from './advisory-attendance.service';
 import { CreateAdvisoryAttendanceDto } from './dto/create-advisory-attendance.dto';
 import { UpdateAdvisoryAttendanceDto } from './dto/update-advisory-attendance.dto';
@@ -91,10 +92,10 @@ export class AdvisoryAttendanceController {
   async markBulkAttendance(
     @Param('sessionId', ParseIntPipe) sessionId: number,
     @Body() dto: BulkAttendanceDto,
-    @Request() req: any,
+    @Request() req: RequestWithUser,
   ) {
     try {
-      const professorId = req.user.userId;
+      const professorId = req.user.user_id;
       return await this.advisoryAttendanceService.markBulkAttendance(
         sessionId,
         dto,
@@ -120,10 +121,10 @@ export class AdvisoryAttendanceController {
   async completeSession(
     @Param('sessionId', ParseIntPipe) sessionId: number,
     @Body() dto: CompleteSessionDto,
-    @Request() req: any,
+    @Request() req: RequestWithUser,
   ) {
     try {
-      const professorId = req.user.userId;
+      const professorId = req.user.user_id;
       return await this.advisoryAttendanceService.completeSession(
         sessionId,
         dto,

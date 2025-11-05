@@ -9,6 +9,7 @@ import {
   Request,
   Query,
 } from '@nestjs/common';
+import { RequestWithUser } from '../auth/types/request-with-user';
 import {
   ApiTags,
   ApiOperation,
@@ -48,11 +49,11 @@ export class StudentInvitationsController {
   })
   @ApiOkResponse({ description: 'Invitaciones obtenidas exitosamente' })
   async getMyInvitations(
-    @Request() req: any,
+    @Request() req: RequestWithUser,
     @Query('status') status?: InvitationStatus,
   ) {
     try {
-      const studentId = req.user.userId;
+      const studentId = req.user.user_id;
       return await this.invitationService.getStudentInvitations(
         studentId,
         status,
@@ -75,10 +76,10 @@ export class StudentInvitationsController {
   async respondToInvitation(
     @Param('invitationId', ParseIntPipe) invitationId: number,
     @Body() dto: RespondInvitationDto,
-    @Request() req: any,
+    @Request() req: RequestWithUser,
   ) {
     try {
-      const studentId = req.user.userId;
+      const studentId = req.user.user_id;
       return await this.invitationService.respondToInvitation(
         invitationId,
         dto,
@@ -100,10 +101,10 @@ export class StudentInvitationsController {
   @ApiNotFoundResponse({ description: 'Invitación no encontrada' })
   async getInvitationDetail(
     @Param('invitationId', ParseIntPipe) invitationId: number,
-    @Request() req: any,
+    @Request() req: RequestWithUser,
   ) {
     try {
-      const studentId = req.user.userId;
+      const studentId = req.user.user_id;
       // Obtener todas las invitaciones del estudiante y filtrar por ID
       const invitations =
         await this.invitationService.getStudentInvitations(studentId);

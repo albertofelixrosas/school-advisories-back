@@ -11,6 +11,7 @@ import {
   NotFoundException,
   Request,
 } from '@nestjs/common';
+import { RequestWithUser } from '../auth/types/request-with-user';
 import { AdvisoriesService } from './advisories.service';
 import { CreateAdvisoryDto } from './dto/create-advisory.dto';
 import { UpdateAdvisoryDto } from './dto/update-advisory.dto';
@@ -282,11 +283,11 @@ export class AdvisoriesController {
     description: 'Materia, venue o profesor no encontrado',
   })
   async createDirectSession(
-    @Request() req: any,
+    @Request() req: RequestWithUser,
     @Body() dto: CreateDirectSessionDto,
   ) {
     try {
-      const professorId = req.user.userId; // Obtenido del JWT
+      const professorId = req.user.user_id; // Obtenido del JWT
       console.log(
         'Crear sesión directa por profesor:',
         professorId,
@@ -330,10 +331,10 @@ export class AdvisoriesController {
   async inviteStudentsToSession(
     @Param('sessionId', ParseIntPipe) sessionId: number,
     @Body() dto: InviteStudentsDto,
-    @Request() req: any,
+    @Request() req: RequestWithUser,
   ) {
     try {
-      const professorId = req.user.userId;
+      const professorId = req.user.user_id;
       return await this.invitationService.inviteStudentsToSession(
         sessionId,
         dto,
@@ -354,10 +355,10 @@ export class AdvisoriesController {
   @ApiOkResponse({ description: 'Invitaciones obtenidas exitosamente' })
   async getSessionInvitations(
     @Param('sessionId', ParseIntPipe) sessionId: number,
-    @Request() req: any,
+    @Request() req: RequestWithUser,
   ) {
     try {
-      const userId = req.user.userId;
+      const userId = req.user.user_id;
       const userRole = req.user.role;
 
       // Solo profesores necesitan validación de autorización
