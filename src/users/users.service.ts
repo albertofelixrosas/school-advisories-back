@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { Subject } from '../subjects/entities/subject.entity';
 import * as bcrypt from 'bcrypt';
 import { UserRole } from './user-role.enum';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -91,7 +92,7 @@ export class UsersService {
     // Extraer y organizar las materias únicas
     type SubjectMapValue = {
       subject_detail_id: number;
-      subject: any;
+      subject: Subject;
       professor: {
         user_id: number;
         name: string;

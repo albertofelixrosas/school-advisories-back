@@ -18,6 +18,7 @@ import { Venue } from 'src/venues/entities/venue.entity';
 import { UserRole } from 'src/users/user-role.enum';
 import { AdvisoryStatus } from './advisory-status.enum';
 import { AdvisoryResponseDto } from './dto/advisory-response.dto';
+import { WeekDay } from 'src/common/week-day.enum';
 
 @Injectable()
 export class AdvisoriesService {
@@ -349,7 +350,7 @@ export class AdvisoriesService {
       // Crear schedules
       const schedules = dto.schedules.map((schedule) => {
         return this.advisoryScheduleRepo.create({
-          day: schedule.day as any,
+          day: schedule.day as WeekDay,
           begin_time: schedule.begin_time,
           end_time: schedule.end_time,
           advisory_id: advisory!.advisory_id,

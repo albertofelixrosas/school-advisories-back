@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, FindOptionsWhere } from 'typeorm';
 import {
   StudentInvitation,
   InvitationStatus,
@@ -171,7 +171,7 @@ export class InvitationService {
     studentId: number,
     status?: InvitationStatus,
   ): Promise<InvitationResponseDto[]> {
-    const whereCondition: any = { student_id: studentId };
+    const whereCondition: FindOptionsWhere<StudentInvitation> = { student_id: studentId };
 
     if (status) {
       whereCondition.status = status;
