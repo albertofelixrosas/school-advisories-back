@@ -193,9 +193,7 @@ export class ProfileService {
     }
   }
 
-  private getStudentRecentActivity(
-    userId: number,
-  ): RecentActivityDto {
+  private getStudentRecentActivity(userId: number): RecentActivityDto {
     try {
       // TODO: Implementar queries reales para actividad reciente
       return {

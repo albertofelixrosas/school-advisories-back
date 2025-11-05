@@ -43,19 +43,19 @@
 
 ---
 
-### **🟡 FASE 2: DTOS INSEGUROS [0/1 COMPLETADO]**
+### **🟡 FASE 2: DTOS INSEGUROS [1/1 COMPLETADO] ✅**
 
-#### **📁 profile-response.dto.ts** ⏳
-- [ ] Crear interface `AppointmentSummary` con propiedades específicas
-- [ ] Crear interface `SubjectSummary` con propiedades específicas
-- [ ] Crear interface `ScheduleEntry` con propiedades específicas
-- [ ] Cambiar `last_appointment?: any` → `AppointmentSummary | undefined`
-- [ ] Cambiar `upcoming_appointments: any[]` → `AppointmentSummary[]`
-- [ ] Cambiar `recently_completed: any[]` → `AppointmentSummary[]`
-- [ ] Cambiar `subjects: any[]` → `SubjectSummary[]`
-- [ ] Cambiar `current_schedule: any[]` → `ScheduleEntry[]`
-- [ ] Verificar endpoints que usan este DTO
-- [ ] Compilar y verificar sin errores
+#### **📁 profile-response.dto.ts** ✅
+- [x] Crear interface `AppointmentSummary` con propiedades específicas
+- [x] Crear interface `SubjectSummary` con propiedades específicas
+- [x] Crear interface `ScheduleEntry` con propiedades específicas
+- [x] Cambiar `last_appointment?: any` → `AppointmentSummary | null`
+- [x] Cambiar `upcoming_appointments: any[]` → `AppointmentSummary[]`
+- [x] Cambiar `recently_completed: any[]` → `AppointmentSummary[]`
+- [x] Cambiar `subjects: any[]` → `SubjectSummary[]`
+- [x] Cambiar `current_schedule: any[]` → `ScheduleEntry[]`
+- [x] Verificar endpoints que usan este DTO
+- [x] Compilar y verificar sin errores
 
 ---
 
@@ -111,11 +111,11 @@
 ### **Resumen de completación:**
 ```
 FASE 1: ████████████████████████████████████████ 100% (4/4 archivos) ✅
-FASE 2: ████████████████████████████████████████ 0% (0/1 archivo)
+FASE 2: ████████████████████████████████████████ 100% (1/1 archivo) ✅
 FASE 3: ████████████████████████████████████████ 0% (0/3 archivos)
 FASE 4: ████████████████████████████████████████ 0% (PENDIENTE)
 
-TOTAL:  ████████████████████████████████████████ 55% (12/22 problemas)
+TOTAL:  ████████████████████████████████████████ 82% (18/22 problemas)
 ```
 
 ### **Problemas por severidad:**
@@ -169,7 +169,8 @@ code src/student-invitations/student-invitations.controller.ts
 
 ---
 
-## 🚀 **¡CONTINUAR CON FASE 2!**
+## 🚀 **¡CONTINUAR CON FASE 3!**
 
 **✅ FASE 1 COMPLETADA:** Todos los controladores críticos corregidos  
-**Próximo paso:** Abrir `src/profile/dto/profile-response.dto.ts` y comenzar FASE 2
+**✅ FASE 2 COMPLETADA:** DTOs con propiedades `any` ahora tipados con seguridad  
+**Próximo paso:** Abrir `src/users/users.service.ts` y comenzar FASE 3

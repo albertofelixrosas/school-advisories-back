@@ -1,6 +1,36 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '../../users/user-role.enum';
 
+// Interfaces específicas para reemplazar tipos 'any'
+export interface AppointmentSummary {
+  advisory_date_id?: number;
+  date?: string;
+  start_time?: string;
+  end_time?: string;
+  location?: string;
+  professor_name?: string;
+  subject_name?: string;
+  status?: string;
+}
+
+export interface SubjectSummary {
+  subject_id: number;
+  name: string;
+  // Campos opcionales para futuras expansiones
+  professor_name?: string;
+  schedule?: string;
+  credits?: number;
+}
+
+export interface ScheduleEntry {
+  schedule_id?: number;
+  day_of_week?: string;
+  start_time?: string;
+  end_time?: string;
+  location?: string;
+  subject_name?: string;
+}
+
 export class BaseUserInfoDto {
   @ApiProperty({ example: 1 })
   user_id: number;
@@ -71,14 +101,21 @@ export class StudentStatisticsDto {
 }
 
 export class RecentActivityDto {
-  @ApiProperty({ type: Object, nullable: true })
-  last_appointment?: any;
+  @ApiProperty({
+    type: Object,
+    nullable: true,
+    description: 'Última cita programada',
+  })
+  last_appointment?: AppointmentSummary | null;
 
-  @ApiProperty({ type: [Object] })
-  upcoming_appointments: any[];
+  @ApiProperty({ type: [Object], description: 'Citas próximas programadas' })
+  upcoming_appointments: AppointmentSummary[];
 
-  @ApiProperty({ type: [Object] })
-  recently_completed: any[];
+  @ApiProperty({
+    type: [Object],
+    description: 'Citas completadas recientemente',
+  })
+  recently_completed: AppointmentSummary[];
 }
 
 export class StudentProfileResponseDto {
@@ -127,8 +164,11 @@ export class ProfessorProfileDto {
 }
 
 export class AssignedSubjectsDto {
-  @ApiProperty({ type: [Object] })
-  subjects: any[];
+  @ApiProperty({
+    type: [Object],
+    description: 'Materias asignadas al profesor',
+  })
+  subjects: SubjectSummary[];
 
   @ApiProperty({ example: 3 })
   total_subjects: number;
@@ -152,8 +192,8 @@ export class ProfessorStatisticsDto {
 }
 
 export class AvailabilityDto {
-  @ApiProperty({ type: [Object] })
-  current_schedule: any[];
+  @ApiProperty({ type: [Object], description: 'Horario actual del profesor' })
+  current_schedule: ScheduleEntry[];
 
   @ApiProperty({ example: '2024-10-10T10:00:00.000Z' })
   next_available_slot: string;
