@@ -1,0 +1,89 @@
+@startuml Estados de Solicitud de Asesoría
+!theme plain
+skinparam backgroundColor white
+skinparam stateBackgroundColor lightblue
+skinparam stateBorderColor navy
+
+title Estados del Flujo de Solicitudes de Asesoría
+
+[*] --> PENDING : Estudiante crea\nsolicitud
+
+state PENDING {
+  state PENDING : 📋 Solicitud Pendiente
+  state PENDING : • Esperando revisión del profesor
+  state PENDING : • Notificación enviada al profesor
+  state PENDING : • Estudiante puede cancelar
+}
+
+state APPROVED {
+  state APPROVED : ✅ Solicitud Aprobada
+  state APPROVED : • Sesión de asesoría creada
+  state APPROVED : • Estudiante notificado
+  state APPROVED : • Fecha y hora confirmadas
+}
+
+state REJECTED {
+  state REJECTED : ❌ Solicitud Rechazada
+  state REJECTED : • Motivo del rechazo registrado
+  state REJECTED : • Estudiante notificado
+  state REJECTED : • No se crea sesión
+}
+
+state CANCELLED {
+  state CANCELLED : 🚫 Solicitud Cancelada
+  state CANCELLED : • Cancelada por estudiante o profesor
+  state CANCELLED : • Motivo de cancelación registrado
+  state CANCELLED : • Ambas partes notificadas
+}
+
+state COMPLETED {
+  state COMPLETED : 🎓 Sesión Completada
+  state COMPLETED : • Asistencia registrada
+  state COMPLETED : • Notas de la sesión guardadas
+  state COMPLETED : • Seguimiento enviado por email
+}
+
+' Transiciones principales
+PENDING --> APPROVED : Profesor aprueba\n[con mensaje opcional]
+PENDING --> REJECTED : Profesor rechaza\n[con motivo]
+PENDING --> CANCELLED : Estudiante cancela\n[antes de aprobación]
+
+' Transiciones desde APPROVED
+APPROVED --> COMPLETED : Profesor registra\nasistencia y completa
+APPROVED --> CANCELLED : Profesor o estudiante\ncancela [con motivo]
+
+' Estados finales
+REJECTED --> [*] : Proceso terminado
+CANCELLED --> [*] : Proceso terminado  
+COMPLETED --> [*] : Proceso terminado
+
+' Notas y validaciones
+note right of PENDING : Timeout automático:\nSi no hay respuesta en 7 días,\nse marca como EXPIRED
+
+note right of APPROVED : Recordatorios automáticos:\n• 24 horas antes de la sesión\n• 1 hora antes de la sesión
+
+note right of COMPLETED : Métricas registradas:\n• Duración real de la sesión\n• Rating de satisfacción\n• Temas cubiertos
+
+' Auto-transiciones especiales
+PENDING : entry / enviarNotificacionProfesor()
+PENDING : after 7 days / marcarComoExpirada()
+
+APPROVED : entry / crearSesionAsesoria()
+APPROVED : entry / enviarConfirmacionEstudiante()
+APPROVED : 24 hours before / enviarRecordatorio()
+
+COMPLETED : entry / calcularMetricas()
+COMPLETED : entry / enviarSeguimiento()
+
+state "Estados de Sesión Relacionados" as SessionStates {
+  state SCHEDULED : 📅 Sesión Programada
+  state IN_PROGRESS : ⏳ Sesión en Curso
+  state SESSION_COMPLETED : ✅ Sesión Finalizada
+  
+  APPROVED --> SCHEDULED : Automático al\naprobar solicitud
+  SCHEDULED --> IN_PROGRESS : Profesor inicia\nsesión
+  IN_PROGRESS --> SESSION_COMPLETED : Profesor registra\nasistencia
+  SESSION_COMPLETED --> COMPLETED : Actualización de\nestado de solicitud
+}
+
+@enduml

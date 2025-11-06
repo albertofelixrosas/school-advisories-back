@@ -1,0 +1,92 @@
+@startuml Sistema de Asesorías - Casos de Uso
+!theme plain
+skinparam backgroundColor white
+skinparam actorBackgroundColor lightblue
+skinparam usecaseBackgroundColor lightgreen
+skinparam packageBackgroundColor lightyellow
+
+title Sistema de Asesorías Universitarias - Casos de Uso
+
+actor "Estudiante" as Student #lightblue
+actor "Profesor" as Professor #lightcoral  
+actor "Administrador" as Admin #lightgray
+
+package "Sistema de Asesorías" #lightyellow {
+  
+  package "Gestión de Solicitudes" {
+    usecase "Crear Solicitud\nde Asesoría" as UC1
+    usecase "Revisar Solicitudes\nPendientes" as UC2
+    usecase "Aprobar/Rechazar\nSolicitud" as UC3
+    usecase "Cancelar Solicitud" as UC4
+  }
+  
+  package "Gestión de Sesiones" {
+    usecase "Crear Sesión\nDirecta" as UC5
+    usecase "Invitar Estudiantes\na Sesión" as UC6
+    usecase "Registrar Asistencia\nMasiva" as UC7
+    usecase "Completar Sesión\ncon Notas" as UC8
+  }
+  
+  package "Disponibilidad" {
+    usecase "Configurar\nDisponibilidad Recurrente" as UC9
+    usecase "Gestionar Horarios\nDisponibles" as UC10
+    usecase "Ver Disponibilidad\nde Profesores" as UC11
+  }
+  
+  package "Notificaciones" {
+    usecase "Configurar Preferencias\nde Notificación" as UC12
+    usecase "Recibir Notificaciones\nAutomáticas" as UC13
+    usecase "Ver Historial de\nNotificaciones" as UC14
+  }
+  
+  package "Reportes y Administración" {
+    usecase "Generar Reportes\nEstadísticos" as UC15
+    usecase "Exportar Datos\na Excel/PDF" as UC16
+    usecase "Gestionar Usuarios\ny Materias" as UC17
+    usecase "Configurar Plantillas\nde Email" as UC18
+  }
+}
+
+' Relaciones Estudiante
+Student --> UC1 : solicita
+Student --> UC4 : cancela
+Student --> UC11 : consulta
+Student --> UC12 : configura
+Student --> UC13 : recibe
+Student --> UC14 : consulta
+
+' Relaciones Profesor
+Professor --> UC2 : revisa
+Professor --> UC3 : decide
+Professor --> UC5 : crea
+Professor --> UC6 : invita
+Professor --> UC7 : registra
+Professor --> UC8 : completa
+Professor --> UC9 : configura
+Professor --> UC10 : gestiona
+Professor --> UC12 : configura
+Professor --> UC13 : recibe
+Professor --> UC14 : consulta
+
+' Relaciones Administrador
+Admin --> UC15 : genera
+Admin --> UC16 : exporta
+Admin --> UC17 : gestiona
+Admin --> UC18 : configura
+Admin --> UC12 : configura
+Admin --> UC14 : consulta
+
+' Dependencias entre casos de uso
+UC3 ..> UC13 : <<include>>
+UC5 ..> UC13 : <<include>>
+UC7 ..> UC8 : <<extend>>
+
+note right of UC1 : El estudiante puede solicitar\nasesoría para materias específicas\ncon profesor y horario preferido
+
+note right of UC3 : Al aprobar/rechazar se envían\nnotificaciones automáticas\nal estudiante
+
+note right of UC9 : Permite definir patrones\nrecurrentes de disponibilidad\n(ej: Lunes y Miércoles 10-12)
+
+note right of UC15 : Incluye métricas de asistencia,\nefectividad por profesor,\ny estadísticas por materia
+
+@enduml

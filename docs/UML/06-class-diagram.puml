@@ -1,0 +1,267 @@
+@startuml Modelo de Dominio - Clases Principales
+!theme plain
+skinparam backgroundColor white
+skinparam classBackgroundColor lightblue
+skinparam classBorderColor navy
+
+title Modelo de Dominio: Clases Principales del Sistema
+
+package "User Management" #E8F4FD {
+  class User {
+    -user_id: number
+    -username: string
+    -email: string
+    -name: string
+    -last_name: string
+    -phone_number: string
+    -photo_url: string
+    -role: UserRole
+    -is_active: boolean
+    -created_at: Date
+    -updated_at: Date
+    --
+    +findByUsername(username: string): User
+    +updateProfile(data: UpdateUserDto): User
+    +changeRole(newRole: UserRole): void
+  }
+  
+  enum UserRole {
+    STUDENT
+    PROFESSOR
+    ADMIN
+  }
+  
+  class RefreshToken {
+    -token_id: number
+    -user_id: number
+    -token: string
+    -expires_at: Date
+    -created_at: Date
+    --
+    +isValid(): boolean
+    +revoke(): void
+  }
+}
+
+package "Subject Management" #FFF2E8 {
+  class Subject {
+    -subject_id: number
+    -subject: string
+    --
+    +getDetails(): SubjectDetails[]
+  }
+  
+  class SubjectDetails {
+    -subject_detail_id: number
+    -subject_id: number
+    -professor_id: number
+    --
+    +getSchedules(): SubjectSchedule[]
+    +getAdvisories(): Advisory[]
+  }
+  
+  class SubjectSchedule {
+    -schedule_id: number
+    -day_of_week: WeekDay
+    -start_time: string
+    -end_time: string
+    -location: string
+    --
+    +isActiveOnDay(day: WeekDay): boolean
+  }
+}
+
+package "Advisory System" #E8F8E8 {
+  class AdvisoryRequest {
+    -request_id: number
+    -student_id: number
+    -subject_detail_id: number
+    -preferred_date: Date
+    -preferred_time: string
+    -message: string
+    -status: RequestStatus
+    -response_message: string
+    -created_at: Date
+    -reviewed_at: Date
+    --
+    +approve(message: string): void
+    +reject(reason: string): void
+    +cancel(reason: string): void
+  }
+  
+  enum RequestStatus {
+    PENDING
+    APPROVED
+    REJECTED
+    CANCELLED
+  }
+  
+  class Advisory {
+    -advisory_id: number
+    -professor_id: number
+    -subject_detail_id: number
+    -max_students: number
+    -status: AdvisoryStatus
+    -created_at: Date
+    --
+    +addSchedule(schedule: AdvisorySchedule): void
+    +createSession(date: Date, venue: Venue): AdvisoryDate
+  }
+  
+  class AdvisoryDate {
+    -advisory_date_id: number
+    -advisory_id: number
+    -venue_id: number
+    -date: Date
+    -topic: string
+    -notes: string
+    -session_link: string
+    -status: SessionStatus
+    --
+    +markAsCompleted(): void
+    +addAttendance(student: User): AdvisoryAttendance
+  }
+  
+  class AdvisorySchedule {
+    -advisory_schedule_id: number
+    -advisory_id: number
+    -day: WeekDay
+    -begin_time: string
+    -end_time: string
+    -max_students_per_slot: number
+    -is_active: boolean
+    --
+    +isAvailableAt(time: string): boolean
+  }
+  
+  class AdvisoryAttendance {
+    -attendance_id: number
+    -advisory_date_id: number
+    -student_id: number
+    -attendance_status: AttendanceStatus
+    -attendance_time: Date
+    -notes: string
+    --
+    +markPresent(): void
+    +addNotes(notes: string): void
+  }
+}
+
+package "Invitations & Availability" #F8E8F8 {
+  class StudentInvitation {
+    -invitation_id: number
+    -advisory_date_id: number
+    -student_id: number
+    -invited_by_id: number
+    -status: InvitationStatus
+    -invitation_message: string
+    -response_message: string
+    -expires_at: Date
+    --
+    +accept(message: string): void
+    +decline(reason: string): void
+    +isExpired(): boolean
+  }
+  
+  class ProfessorAvailability {
+    -availability_id: number
+    -professor_id: number
+    -subject_detail_id: number
+    -day_of_week: WeekDay
+    -start_time: string
+    -end_time: string
+    -is_recurring: boolean
+    -is_active: boolean
+    --
+    +createSlot(date: Date): AvailabilitySlot
+    +deactivate(): void
+  }
+}
+
+package "Notifications" #FFE8E8 {
+  class EmailTemplate {
+    -template_id: number
+    -template_name: string
+    -subject_template: string
+    -html_template: string
+    -text_template: string
+    -is_active: boolean
+    --
+    +render(data: object): RenderedEmail
+  }
+  
+  class NotificationPreferences {
+    -preference_id: number
+    -user_id: number
+    -email_enabled: boolean
+    -reminder_24h: boolean
+    -reminder_1h: boolean
+    -session_updates: boolean
+    --
+    +updateSettings(settings: object): void
+  }
+  
+  class NotificationLogs {
+    -log_id: number
+    -user_id: number
+    -notification_type: string
+    -recipient_email: string
+    -subject: string
+    -status: DeliveryStatus
+    -sent_at: Date
+    --
+    +markAsDelivered(): void
+    +markAsFailed(error: string): void
+  }
+}
+
+package "Infrastructure" #F0F0F0 {
+  class Venue {
+    -venue_id: number
+    -name: string
+    -location: string
+    -capacity: number
+    -equipment: string[]
+    -is_active: boolean
+    --
+    +isAvailable(date: Date): boolean
+  }
+}
+
+' Relaciones principales
+User ||--o{ RefreshToken
+User ||--o{ AdvisoryRequest
+User ||--o{ Advisory
+User ||--o{ AdvisoryAttendance
+User ||--o{ StudentInvitation
+User ||--o{ ProfessorAvailability
+User ||--o{ NotificationPreferences
+User ||--o{ NotificationLogs
+
+Subject ||--o{ SubjectDetails
+SubjectDetails ||--o{ SubjectSchedule
+SubjectDetails ||--o{ Advisory
+SubjectDetails ||--o{ AdvisoryRequest
+SubjectDetails ||--o{ ProfessorAvailability
+
+Advisory ||--o{ AdvisorySchedule
+Advisory ||--o{ AdvisoryDate
+AdvisoryDate ||--o{ AdvisoryAttendance
+AdvisoryDate ||--o{ StudentInvitation
+
+Venue ||--o{ AdvisoryDate
+
+' Enumeraciones asociadas
+User --> UserRole
+AdvisoryRequest --> RequestStatus
+StudentInvitation --> InvitationStatus : status
+AdvisorySchedule --> WeekDay : day
+SubjectSchedule --> WeekDay : day_of_week
+ProfessorAvailability --> WeekDay : day_of_week
+
+note top of User : Clase central del sistema\nManeja autenticación y perfiles
+note top of AdvisoryRequest : Punto de entrada principal\npara solicitudes de estudiantes
+note top of Advisory : Representa una asesoría programada\ncon múltiples sesiones posibles
+note right of EmailTemplate : Sistema de plantillas flexible\npara diferentes tipos de notificaciones
+
+@enduml

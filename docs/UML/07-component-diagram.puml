@@ -1,0 +1,191 @@
+@startuml Diagrama de Componentes del Sistema
+!theme plain
+skinparam backgroundColor white
+skinparam componentBackgroundColor lightblue
+skinparam packageBackgroundColor lightyellow
+
+title Sistema de Asesorías - Diagrama de Componentes Detallado
+
+package "Frontend React Application" as Frontend {
+  component [Student Portal] as StudentApp {
+    component [Advisory Request Form]
+    component [Session Calendar]
+    component [Invitation Manager]
+    component [Notification Center]
+  }
+  
+  component [Professor Portal] as ProfessorApp {
+    component [Request Review Panel]
+    component [Availability Manager]
+    component [Session Creator]
+    component [Attendance Tracker]
+  }
+  
+  component [Admin Portal] as AdminApp {
+    component [User Management]
+    component [Reports Dashboard]
+    component [System Configuration]
+    component [Email Templates]
+  }
+  
+  component [Shared Components] {
+    component [Authentication]
+    component [Navigation]
+    component [Common Forms]
+    component [Notification Toasts]
+  }
+}
+
+package "Backend NestJS Application" as Backend {
+  
+  package "Core Layer" {
+    component [Auth Controller] as AuthCtrl
+    component [Auth Service] as AuthSvc
+    component [JWT Strategy]
+    component [Roles Guard]
+  }
+  
+  package "Business Logic Layer" {
+    component [Advisory Request Controller] as RequestCtrl
+    component [Advisory Request Service] as RequestSvc
+    
+    component [Advisory Controller] as AdvisoryCtrl  
+    component [Advisory Service] as AdvisorySvc
+    
+    component [Availability Controller] as AvailabilityCtrl
+    component [Availability Service] as AvailabilitySvc
+    
+    component [Invitation Controller] as InvitationCtrl
+    component [Invitation Service] as InvitationSvc
+    
+    component [Users Controller] as UsersCtrl
+    component [Users Service] as UsersSvc
+  }
+  
+  package "Communication Layer" {
+    component [Notification Controller] as NotificationCtrl
+    component [Notification Service] as NotificationSvc
+    component [Email Service] as EmailSvc
+    component [Email Processor] as EmailProcessor
+    component [Template Engine] as TemplateEngine
+  }
+  
+  package "Data Access Layer" {
+    component [TypeORM Repositories] {
+      component [User Repository]
+      component [Advisory Repository]
+      component [Request Repository]
+      component [Notification Repository]
+    }
+  }
+}
+
+package "Message Queue System" as Queue {
+  component [Bull Queue Manager]
+  component [Redis Connection]
+  component [Job Processors] {
+    component [Email Job Processor]
+    component [Report Job Processor]
+    component [Cleanup Job Processor]
+  }
+}
+
+package "Database Layer" as Database {
+  database "PostgreSQL" {
+    component [User Tables]
+    component [Advisory Tables]
+    component [Notification Tables]
+    component [System Tables]
+  }
+  
+  database "Redis Cache" {
+    component [Session Storage]
+    component [Queue Data]
+    component [Temporary Cache]
+  }
+}
+
+package "External Services" as External {
+  component [SMTP Service]
+  component [File Storage]
+  component [Monitoring Service]
+}
+
+' Frontend Internal Connections
+StudentApp --> [Shared Components]
+ProfessorApp --> [Shared Components]  
+AdminApp --> [Shared Components]
+
+' Frontend to Backend Connections
+[Authentication] --> AuthCtrl : HTTP/JWT
+[Advisory Request Form] --> RequestCtrl : REST API
+[Session Calendar] --> AdvisoryCtrl : REST API
+[Request Review Panel] --> RequestCtrl : REST API
+[Availability Manager] --> AvailabilityCtrl : REST API
+[Session Creator] --> AdvisoryCtrl : REST API
+[Attendance Tracker] --> AdvisoryCtrl : REST API
+[Reports Dashboard] --> NotificationCtrl : REST API
+
+' Backend Internal Connections - Controllers to Services
+AuthCtrl --> AuthSvc
+RequestCtrl --> RequestSvc
+AdvisoryCtrl --> AdvisorySvc
+AvailabilityCtrl --> AvailabilitySvc
+InvitationCtrl --> InvitationSvc
+UsersCtrl --> UsersSvc
+NotificationCtrl --> NotificationSvc
+
+' Business Logic Interactions
+RequestSvc --> NotificationSvc : "Send notifications"
+AdvisorySvc --> NotificationSvc : "Send notifications"
+InvitationSvc --> NotificationSvc : "Send notifications"
+NotificationSvc --> EmailSvc : "Queue emails"
+
+' Service to Repository Connections
+AuthSvc --> [User Repository]
+RequestSvc --> [Request Repository]
+AdvisorySvc --> [Advisory Repository]
+UsersSvc --> [User Repository]
+NotificationSvc --> [Notification Repository]
+
+' Queue System Connections
+EmailSvc --> [Bull Queue Manager] : "Enqueue jobs"
+[Bull Queue Manager] --> [Redis Connection]
+[Email Job Processor] --> [SMTP Service]
+
+' Database Connections
+[TypeORM Repositories] --> [PostgreSQL]
+[Bull Queue Manager] --> [Redis Cache]
+AuthSvc --> [Redis Cache] : "Session management"
+
+' External Service Connections
+[Email Job Processor] --> [SMTP Service] : "Send emails"
+NotificationSvc --> [File Storage] : "Store attachments"
+
+' Security and Cross-cutting Concerns
+component [Security Layer] {
+  component [Rate Limiter]
+  component [Request Validator]
+  component [CORS Handler]
+  component [Helmet Security]
+}
+
+[Security Layer] --> Backend : "Applied to all requests"
+
+' Monitoring and Logging
+component [Logging Layer] {
+  component [Winston Logger]
+  component [Error Handler]
+  component [Performance Monitor]
+}
+
+Backend --> [Logging Layer] : "Log all operations"
+[Logging Layer] --> [Monitoring Service] : "Send metrics"
+
+note right of [Email Processor] : Procesa emails de forma\nasíncrona usando Bull Queue\ncon reintentos automáticos
+
+note right of [TypeORM Repositories] : Abstraction layer que maneja\ntodas las operaciones de BD\ncon validaciones y transacciones
+
+note bottom of [Security Layer] : Middleware aplicado globalmente\npara validación, autenticación\ny protección de endpoints
+
+@enduml

@@ -1,0 +1,153 @@
+@startuml Flujo de Actividades - Proceso Completo de Asesoría
+!theme plain
+skinparam backgroundColor white
+skinparam activityBackgroundColor lightblue
+skinparam activityBorderColor navy
+
+title Diagrama de Actividades: Proceso Completo de Gestión de Asesorías
+
+|#LightBlue|Estudiante|
+start
+:Identificar necesidad\nde asesoría;
+:Acceder al sistema;
+:Seleccionar materia\ny profesor;
+
+|#LightCoral|Sistema|
+:Validar datos\nde la solicitud;
+
+if (¿Datos válidos?) then (❌ No)
+  |Estudiante|
+  :Mostrar errores\nde validación;
+  stop
+else (✅ Sí)
+  :Crear AdvisoryRequest\ncon estado PENDING;
+  :Registrar timestamp\ny metadatos;
+endif
+
+|#LightGreen|Servicio de Notificaciones|
+:Preparar plantilla\nde email para profesor;
+:Enviar notificación\nvia Redis Queue;
+
+|#LightYellow|Profesor|
+:Recibir email de\nnotificación;
+:Acceder al dashboard\nde solicitudes;
+:Revisar detalles de\nla solicitud;
+
+if (¿Decisión del profesor?) then (✅ Aprobar)
+  |Sistema|
+  :Actualizar estado\na APPROVED;
+  :Crear Advisory y\nAdvisoryDate;
+  :Generar enlace único\nde sesión;
+  
+  |Servicio de Notificaciones|
+  :Enviar confirmación\nal estudiante;
+  :Programar recordatorios\nautomáticos;
+  
+  |Estudiante|
+  :Recibir confirmación\nde aprobación;
+  :Agregar sesión\nal calendario;
+  
+else (❌ Rechazar)
+  |Sistema|
+  :Actualizar estado\na REJECTED;
+  :Registrar motivo\ndel rechazo;
+  
+  |Servicio de Notificaciones|
+  :Enviar notificación\nde rechazo;
+  
+  |Estudiante|
+  :Recibir notificación\nde rechazo;
+  
+  stop
+endif
+
+' Proceso de seguimiento automático
+fork
+  |Sistema|
+  :Iniciar cronómetro\nde recordatorios;
+  
+  :Esperar hasta\n24 horas antes;
+  
+  |Servicio de Notificaciones|
+  :Enviar recordatorio\na ambas partes;
+  
+  :Esperar hasta\n1 hora antes;
+  
+  :Enviar recordatorio\nfinal con enlace;
+  
+fork again
+  |Sistema|
+  :Monitorear estado\nde la solicitud;
+  
+  if (¿Solicitud cancelada?) then (✅ Sí)
+    |Servicio de Notificaciones|
+    :Notificar cancelación\na ambas partes;
+    :Liberar slot de horario;
+    stop
+  else (❌ No)
+    :Continuar monitoreo;
+  endif
+end fork
+
+' Día de la sesión
+|Profesor|
+:Llegar al lugar/\nenlace de la sesión;
+
+if (¿Estudiante asistió?) then (✅ Sí)
+  :Realizar sesión\nde asesoría;
+  :Discutir temas\nplanificados;
+  :Resolver dudas\ndel estudiante;
+  
+  |Sistema|
+  :Registrar inicio\nde sesión real;
+  :Actualizar estado\na IN_PROGRESS;
+  
+  |Profesor|
+  :Completar sesión;
+  :Registrar asistencia\nen el sistema;
+  :Agregar notas y\ncomentarios;
+  
+  |Sistema|
+  :Crear AdvisoryAttendance;
+  :Actualizar estado\na COMPLETED;
+  :Calcular duración\nreal de la sesión;
+  
+  |Servicio de Notificaciones|
+  :Enviar resumen de\nsesión al estudiante;
+  :Solicitar feedback\nde ambas partes;
+  
+else (❌ No)
+  |Profesor|
+  :Registrar\ninasistencia;
+  
+  |Sistema|
+  :Marcar como\nNO_ATTENDANCE;
+  :Actualizar estadísticas;
+  
+  |Servicio de Notificaciones|
+  :Enviar notificación\nde inasistencia;
+  :Ofrecer reprogramación;
+endif
+
+' Proceso de seguimiento post-sesión
+|Sistema|
+:Actualizar métricas\ngenerales;
+:Registrar en historial\ndel estudiante;
+:Actualizar estadísticas\ndel profesor;
+
+fork
+  |Servicio de Notificaciones|
+  :Esperar 24 horas;
+  :Enviar encuesta de\nsatisfacción;
+  
+fork again
+  |Sistema|
+  :Generar datos para\nreportes automáticos;
+  :Actualizar dashboard\nen tiempo real;
+end fork
+
+stop
+
+note right : El sistema mantiene logs\ndetallados de cada paso\npara auditoría y mejora continua
+
+@enduml

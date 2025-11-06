@@ -1,0 +1,76 @@
+@startuml Flujo Principal - Solicitud de Asesoría
+!theme plain
+skinparam backgroundColor white
+skinparam participantBackgroundColor lightblue
+skinparam actorBackgroundColor lightcoral
+
+title Secuencia: Solicitud y Aprobación de Asesoría
+
+actor "Estudiante" as Student
+actor "Profesor" as Professor
+participant "Sistema Web" as System
+participant "Advisory Request\nService" as RequestService
+participant "Notification\nService" as NotificationService
+participant "Email\nService" as EmailService
+database "PostgreSQL" as DB
+queue "Redis Queue" as Queue
+
+== Creación de Solicitud ==
+
+Student -> System : 1. Accede al formulario\nde solicitud
+System -> Student : 2. Muestra materias y\nprofesores disponibles
+
+Student -> System : 3. Envía solicitud\n(materia, profesor, fecha preferida)
+System -> RequestService : 4. Crear solicitud
+RequestService -> DB : 5. Guardar AdvisoryRequest\n(status: PENDING)
+DB --> RequestService : 6. Solicitud creada
+
+RequestService -> NotificationService : 7. Enviar notificación\nal profesor
+NotificationService -> Queue : 8. Agregar job de email
+Queue -> EmailService : 9. Procesar envío
+EmailService -> Professor : 10. 📧 "Nueva solicitud\nde asesoría"
+
+RequestService --> System : 11. Respuesta exitosa
+System --> Student : 12. "Solicitud enviada\nsuccessfully"
+
+== Revisión y Aprobación ==
+
+Professor -> System : 13. Accede al dashboard\nde solicitudes
+System -> RequestService : 14. Obtener solicitudes\npendientes
+RequestService -> DB : 15. Query solicitudes PENDING
+DB --> RequestService : 16. Lista de solicitudes
+RequestService --> System : 17. Datos de solicitudes
+System --> Professor : 18. Muestra solicitudes\npendientes
+
+Professor -> System : 19. Aprueba solicitud\ncon mensaje
+System -> RequestService : 20. Aprobar solicitud
+RequestService -> DB : 21. Actualizar status\na APPROVED
+
+RequestService -> DB : 22. Crear Advisory y\nAdvisoryDate
+DB --> RequestService : 23. Sesión programada
+
+RequestService -> NotificationService : 24. Notificar aprobación\nal estudiante
+NotificationService -> Queue : 25. Job de confirmación
+Queue -> EmailService : 26. Enviar confirmación
+EmailService -> Student : 27. 📧 "Solicitud aprobada\nSesión programada"
+
+RequestService --> System : 28. Aprobación exitosa
+System --> Professor : 29. "Solicitud aprobada\ny sesión creada"
+
+== Realización de Sesión ==
+
+note over Student, Professor : El día de la sesión programada
+
+Professor -> System : 30. Registrar asistencia
+System -> RequestService : 31. Marcar asistencia
+RequestService -> DB : 32. Crear AdvisoryAttendance
+RequestService -> DB : 33. Actualizar estado\na COMPLETED
+
+RequestService -> NotificationService : 34. Notificar finalización
+NotificationService -> Queue : 35. Job de seguimiento
+Queue -> EmailService : 36. Enviar resumen
+EmailService -> Student : 37. 📧 "Sesión completada\nResumen de asesoría"
+
+note right of DB : La base de datos mantiene\nel historial completo de\ntodas las interacciones
+
+@enduml

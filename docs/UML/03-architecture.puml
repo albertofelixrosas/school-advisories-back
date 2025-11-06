@@ -1,0 +1,143 @@
+@startuml Arquitectura del Sistema
+!theme plain
+skinparam backgroundColor white
+skinparam componentBackgroundColor lightblue
+skinparam databaseBackgroundColor lightyellow
+skinparam queueBackgroundColor lightgreen
+
+title Arquitectura del Sistema de Asesorías Universitarias
+
+!define FRONTEND_COLOR #E8F4FD
+!define BACKEND_COLOR #FFF2E8
+!define DATABASE_COLOR #E8F8E8
+!define INFRASTRUCTURE_COLOR #F8E8F8
+
+package "Frontend Layer" FRONTEND_COLOR {
+  component [React Dashboard\nEstudiante] as StudentUI
+  component [React Dashboard\nProfesor] as ProfessorUI
+  component [React Dashboard\nAdministrador] as AdminUI
+  component [Componentes\nCompartidos] as SharedUI
+  
+  StudentUI -down-> SharedUI
+  ProfessorUI -down-> SharedUI
+  AdminUI -down-> SharedUI
+}
+
+package "API Gateway / Load Balancer" #F0F0F0 {
+  component [Reverse Proxy\n(Nginx)] as Gateway
+}
+
+package "Backend Layer (NestJS)" BACKEND_COLOR {
+  
+  package "Core Modules" {
+    component [Auth Module\n• JWT Strategy\n• Roles Guard\n• Refresh Tokens] as AuthModule
+    component [Users Module\n• Gestión de usuarios\n• Perfiles por rol] as UsersModule
+  }
+  
+  package "Business Logic" {
+    component [Advisory Request Module\n• Solicitudes\n• Aprobación/Rechazo] as RequestModule
+    component [Advisories Module\n• Sesiones directas\n• Gestión de asesorías] as AdvisoryModule
+    component [Professor Availability\n• Horarios disponibles\n• Disponibilidad recurrente] as AvailabilityModule
+    component [Student Invitations\n• Invitaciones directas\n• Gestión de respuestas] as InvitationModule
+  }
+  
+  package "Support Services" {
+    component [Notification Module\n• Plantillas de email\n• Preferencias\n• Logs] as NotificationModule
+    component [Email Module\n• Procesamiento async\n• Queue management] as EmailModule
+    component [Reports Module\n• Estadísticas\n• Exportación] as ReportsModule
+  }
+}
+
+package "Message Queue" INFRASTRUCTURE_COLOR {
+  queue [Redis + Bull Queue\n• Email Jobs\n• Report Jobs\n• Async Processing] as MessageQueue
+}
+
+package "Database Layer" DATABASE_COLOR {
+  database "PostgreSQL" as MainDB {
+    folder "Core Tables" {
+      [users]
+      [refresh_tokens]
+    }
+    
+    folder "Advisory System" {
+      [advisory_requests]
+      [advisories]
+      [advisory_dates]
+      [advisory_schedules]
+      [advisory_attendance]
+    }
+    
+    folder "Subjects & Availability" {
+      [subjects]
+      [subject_details]
+      [professor_availability]
+      [venues]
+    }
+    
+    folder "Notifications" {
+      [notification_preferences]
+      [notification_logs]
+      [email_templates]
+      [student_invitations]
+    }
+  }
+  
+  database "Redis Cache" as CacheDB {
+    [Session Store]
+    [Queue Data]
+    [Temporary Cache]
+  }
+}
+
+package "External Services" #FFE8E8 {
+  component [SMTP Server\n• Gmail/Outlook\n• Email delivery] as SMTP
+  component [File Storage\n• Profile photos\n• Report exports] as FileStorage
+}
+
+' Conexiones Frontend
+StudentUI --> Gateway : HTTPS/REST
+ProfessorUI --> Gateway : HTTPS/REST
+AdminUI --> Gateway : HTTPS/REST
+
+' Conexiones Gateway
+Gateway --> AuthModule : Authentication
+Gateway --> RequestModule : API Calls
+Gateway --> AdvisoryModule : API Calls
+Gateway --> NotificationModule : API Calls
+
+' Conexiones entre módulos backend
+AuthModule --> UsersModule
+RequestModule --> NotificationModule
+AdvisoryModule --> NotificationModule
+InvitationModule --> NotificationModule
+NotificationModule --> EmailModule
+
+' Conexiones a colas
+EmailModule --> MessageQueue : Enqueue Jobs
+ReportsModule --> MessageQueue : Enqueue Jobs
+MessageQueue --> EmailModule : Process Jobs
+
+' Conexiones a base de datos
+AuthModule --> MainDB
+UsersModule --> MainDB
+RequestModule --> MainDB
+AdvisoryModule --> MainDB
+AvailabilityModule --> MainDB
+InvitationModule --> MainDB
+NotificationModule --> MainDB
+ReportsModule --> MainDB
+
+' Conexiones a cache
+AuthModule --> CacheDB : Sessions
+MessageQueue --> CacheDB : Queue Storage
+
+' Conexiones externas
+EmailModule --> SMTP : Send Emails
+ReportsModule --> FileStorage : Export Files
+
+' Notas explicativas
+note right of MainDB : • TypeORM con migraciones\n• Índices optimizados\n• Constraints de integridad
+note right of MessageQueue : • Procesamiento asíncrono\n• Retry automático\n• Monitoreo de jobs
+note right of Gateway : • Rate limiting\n• CORS configuration\n• Request logging
+
+@enduml
