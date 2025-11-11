@@ -2,6 +2,7 @@ import { IsNumber, IsOptional, IsDate, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { WeekDay } from '../../common/week-day.enum';
+import { CreateAvailabilitySlotDto } from './create-availability.dto';
 
 export class GetAvailabilityQueryDto {
   @ApiProperty({
@@ -92,6 +93,3 @@ export class BulkAvailabilityDto {
   })
   slots: Omit<CreateAvailabilitySlotDto, 'professor_id'>[];
 }
-
-// Importar CreateAvailabilitySlotDto al final para evitar dependencia circular
-import { CreateAvailabilitySlotDto } from './create-availability.dto';
