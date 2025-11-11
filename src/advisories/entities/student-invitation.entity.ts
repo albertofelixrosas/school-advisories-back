@@ -44,10 +44,10 @@ export class StudentInvitation {
   @Column({ type: 'text', nullable: true })
   response_message: string | null; // Mensaje del estudiante al aceptar/rechazar
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   responded_at: Date | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   expires_at: Date | null;
 
   @CreateDateColumn()

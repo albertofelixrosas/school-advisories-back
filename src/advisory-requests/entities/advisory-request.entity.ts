@@ -38,7 +38,7 @@ export class AdvisoryRequest {
   @Column({ type: 'text', nullable: true })
   professor_response: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   processed_at: Date;
 
   @Column({ nullable: true })

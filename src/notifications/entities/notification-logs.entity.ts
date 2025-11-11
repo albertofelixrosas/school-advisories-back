@@ -34,7 +34,7 @@ export class NotificationLogs {
   @Column({ type: 'text', nullable: true })
   error_message: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   sent_at: Date;
 
   @CreateDateColumn()

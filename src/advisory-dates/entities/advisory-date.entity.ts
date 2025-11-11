@@ -35,7 +35,7 @@ export class AdvisoryDate {
   @Column({ nullable: true })
   session_link: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   completed_at: Date;
 
   @CreateDateColumn()

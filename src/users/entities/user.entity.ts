@@ -55,7 +55,7 @@ export class User {
   })
   role: UserRole;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   last_login_at: Date;
 
   @Column({ default: true })
