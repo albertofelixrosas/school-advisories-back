@@ -22,6 +22,10 @@ export class UsersService {
     return this.usersRepo.findOneBy({ username });
   }
 
+  async findByEmail(email: string): Promise<User | null> {
+    return this.usersRepo.findOneBy({ email });
+  }
+
   async create(dto: CreateUserDto): Promise<User> {
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 

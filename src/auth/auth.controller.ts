@@ -81,19 +81,16 @@ export class AuthController {
   @ApiUnauthorizedResponse({ description: 'Credenciales inválidas' })
   async login(@Body() body: LoginDto): Promise<LoginResponseDto> {
     try {
-      if (!body.username || !body.password) {
+      if (!body.email || !body.password) {
         throw new UnauthorizedException('Credenciales incompletas');
       }
 
-      if (
-        typeof body.username !== 'string' ||
-        typeof body.password !== 'string'
-      ) {
+      if (typeof body.email !== 'string' || typeof body.password !== 'string') {
         throw new UnauthorizedException('Credenciales inválidas');
       }
 
       const user = await this.authService.validateUser(
-        body.username,
+        body.email,
         body.password,
       );
 

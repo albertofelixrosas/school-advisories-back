@@ -33,13 +33,26 @@ export class AuthService {
     private usersRepo: Repository<User>,
   ) {}
 
-  async validateUser(username: string, pass: string) {
-    const user = await this.usersService.findByUsername(username);
-    if (user && (await bcrypt.compare(pass, user.password))) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password, ...result } = user;
-      return result;
+  async validateUser(email: string, pass: string) {
+    console.log('🔍 [AUTH] Iniciando validación de usuario:', email);
+
+    const user = await this.usersService.findByEmail(email);
+    console.log('👤 [AUTH] Usuario encontrado:', user ? 'SÍ' : 'NO');
+
+    if (user) {
+      console.log('🔐 [AUTH] Comparando contraseñas...');
+      const passwordMatch = await bcrypt.compare(pass, user.password);
+      console.log('✅ [AUTH] Contraseña válida:', passwordMatch ? 'SÍ' : 'NO');
+
+      if (passwordMatch) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { password, ...result } = user;
+        console.log('✅ [AUTH] Validación exitosa para usuario:', email);
+        return result;
+      }
     }
+
+    console.log('❌ [AUTH] Validación fallida para usuario:', email);
     throw new UnauthorizedException('Credenciales inválidas');
   }
 
