@@ -6,7 +6,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Advisory } from '../../advisories/entities/advisory.entity';
-import { WeekDay } from 'src/common/week-day.enum';
+import { WeekDay } from '../../common/week-day.enum';
 
 @Entity('advisories_schedules')
 export class AdvisorySchedule {

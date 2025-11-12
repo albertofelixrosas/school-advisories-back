@@ -8,10 +8,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { User } from 'src/users/entities/user.entity';
-import { AdvisorySchedule } from 'src/advisory-schedules/entities/advisory-schedule.entity';
-import { SubjectDetails } from 'src/subject-details/entities/subject-detail.entity';
-import { AdvisoryDate } from 'src/advisory-dates/entities/advisory-date.entity';
+import { User } from '../../users/entities/user.entity';
+import { AdvisorySchedule } from '../../advisory-schedules/entities/advisory-schedule.entity';
+import { SubjectDetails } from '../../subject-details/entities/subject-detail.entity';
+import { AdvisoryDate } from '../../advisory-dates/entities/advisory-date.entity';
 import { AdvisoryStatus } from '../advisory-status.enum';
 
 @Entity('advisories')

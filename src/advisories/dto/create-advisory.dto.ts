@@ -9,7 +9,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { WeekDay } from 'src/common/week-day.enum';
+import { WeekDay } from '../../common/week-day.enum';
 
 class ScheduleDto {
   @ApiProperty({

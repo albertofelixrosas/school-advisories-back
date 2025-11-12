@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { VenueType } from '../venue-type.enum';
-import { AdvisoryDate } from 'src/advisory-dates/entities/advisory-date.entity';
+import { AdvisoryDate } from '../../advisory-dates/entities/advisory-date.entity';
 
 @Entity('venues')
 export class Venue {

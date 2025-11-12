@@ -7,18 +7,18 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Advisory } from './entities/advisory.entity';
-import { User } from 'src/users/entities/user.entity';
+import { User } from '../users/entities/user.entity';
 import { CreateAdvisoryDto } from './dto/create-advisory.dto';
 import { UpdateAdvisoryDto } from './dto/update-advisory.dto';
 import { CreateDirectSessionDto } from './dto/create-direct-session.dto';
-import { SubjectDetails } from 'src/subject-details/entities/subject-detail.entity';
-import { AdvisorySchedule } from 'src/advisory-schedules/entities/advisory-schedule.entity';
-import { AdvisoryDate } from 'src/advisory-dates/entities/advisory-date.entity';
-import { Venue } from 'src/venues/entities/venue.entity';
-import { UserRole } from 'src/users/user-role.enum';
+import { SubjectDetails } from '../subject-details/entities/subject-detail.entity';
+import { AdvisorySchedule } from '../advisory-schedules/entities/advisory-schedule.entity';
+import { AdvisoryDate } from '../advisory-dates/entities/advisory-date.entity';
+import { Venue } from '../venues/entities/venue.entity';
+import { UserRole } from '../users/user-role.enum';
 import { AdvisoryStatus } from './advisory-status.enum';
 import { AdvisoryResponseDto } from './dto/advisory-response.dto';
-import { WeekDay } from 'src/common/week-day.enum';
+import { WeekDay } from '../common/week-day.enum';
 
 @Injectable()
 export class AdvisoriesService {

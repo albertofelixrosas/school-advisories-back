@@ -5,8 +5,8 @@ import { AdvisoryAttendanceService } from './advisory-attendance.service';
 import { AdvisoryAttendanceController } from './advisory-attendance.controller';
 
 import { AdvisoryAttendance } from './entities/advisory-attendance.entity';
-import { User } from 'src/users/entities/user.entity';
-import { AdvisoryDate } from 'src/advisory-dates/entities/advisory-date.entity';
+import { User } from '../users/entities/user.entity';
+import { AdvisoryDate } from '../advisory-dates/entities/advisory-date.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([AdvisoryAttendance, User, AdvisoryDate])],

@@ -9,7 +9,7 @@ import {
 import { Subject } from '../../subjects/entities/subject.entity';
 import { SubjectSchedule } from '../../subject-schedules/entities/subject-schedule.entity';
 import { User } from '../../users/entities/user.entity';
-import { Advisory } from 'src/advisories/entities/advisory.entity';
+import { Advisory } from '../../advisories/entities/advisory.entity';
 
 @Entity('subject_details')
 export class SubjectDetails {

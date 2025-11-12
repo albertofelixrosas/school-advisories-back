@@ -8,8 +8,8 @@ import { UpdateAdvisoryDateDto } from './dto/update-advisory-date.dto';
 import { Repository } from 'typeorm';
 import { AdvisoryDate } from './entities/advisory-date.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Advisory } from 'src/advisories/entities/advisory.entity';
-import { Venue } from 'src/venues/entities/venue.entity';
+import { Advisory } from '../advisories/entities/advisory.entity';
+import { Venue } from '../venues/entities/venue.entity';
 
 @Injectable()
 export class AdvisoryDatesService {

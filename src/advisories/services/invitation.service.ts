@@ -10,9 +10,9 @@ import {
   StudentInvitation,
   InvitationStatus,
 } from '../entities/student-invitation.entity';
-import { AdvisoryDate } from 'src/advisory-dates/entities/advisory-date.entity';
-import { User } from 'src/users/entities/user.entity';
-import { UserRole } from 'src/users/user-role.enum';
+import { AdvisoryDate } from '../../advisory-dates/entities/advisory-date.entity';
+import { User } from '../../users/entities/user.entity';
+import { UserRole } from '../../users/user-role.enum';
 import {
   InviteStudentsDto,
   RespondInvitationDto,

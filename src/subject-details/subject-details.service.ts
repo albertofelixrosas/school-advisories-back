@@ -11,7 +11,7 @@ import { UpdateSubjectDetailDto } from './dto/update-subject-detail.dto';
 import { User } from '../users/entities/user.entity';
 import { Subject } from '../subjects/entities/subject.entity';
 import { SubjectSchedule } from '../subject-schedules/entities/subject-schedule.entity';
-import { UserRole } from 'src/users/user-role.enum';
+import { UserRole } from '../users/user-role.enum';
 
 @Injectable()
 export class SubjectDetailsService {

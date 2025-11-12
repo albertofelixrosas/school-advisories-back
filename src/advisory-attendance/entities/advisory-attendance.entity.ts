@@ -1,5 +1,5 @@
-import { AdvisoryDate } from 'src/advisory-dates/entities/advisory-date.entity';
-import { User } from 'src/users/entities/user.entity';
+import { AdvisoryDate } from '../../advisory-dates/entities/advisory-date.entity';
+import { User } from '../../users/entities/user.entity';
 import {
   Column,
   Entity,

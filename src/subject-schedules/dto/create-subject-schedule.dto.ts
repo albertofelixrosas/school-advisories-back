@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsString } from 'class-validator';
-import { WeekDay } from 'src/common/week-day.enum';
+import { WeekDay } from '../../common/week-day.enum';
 
 export class CreateSubjectScheduleDto {
   @ApiProperty({ example: 'MONDAY', enum: WeekDay })

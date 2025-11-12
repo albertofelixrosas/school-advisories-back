@@ -9,9 +9,9 @@ import { User } from '../users/entities/user.entity';
 import { Subject } from '../subjects/entities/subject.entity';
 import { SubjectDetails } from '../subject-details/entities/subject-detail.entity';
 import { Venue } from '../venues/entities/venue.entity';
-import { UsersModule } from 'src/users/users.module';
+import { UsersModule } from '../users/users.module';
 import { AdvisorySchedule } from '../advisory-schedules/entities/advisory-schedule.entity';
-import { AdvisoryDate } from 'src/advisory-dates/entities/advisory-date.entity';
+import { AdvisoryDate } from '../advisory-dates/entities/advisory-date.entity';
 
 @Module({
   imports: [

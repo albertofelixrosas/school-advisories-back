@@ -4,10 +4,10 @@ import { Repository } from 'typeorm';
 import { Venue } from './entities/venue.entity';
 import { CreateVenueDto } from './dto/create-venue.dto';
 import { UpdateVenueDto } from './dto/update-venue.dto';
-import { PaginatedResult } from 'src/common/interfaces/paginated-result.interface';
+import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 import { VenueDto } from './dto/venue.dto';
 import { VenueQueryDto } from './dto/venue-query.dto';
-import { AdvisoryDate } from 'src/advisory-dates/entities/advisory-date.entity';
+import { AdvisoryDate } from '../advisory-dates/entities/advisory-date.entity';
 
 @Injectable()
 export class VenuesService {

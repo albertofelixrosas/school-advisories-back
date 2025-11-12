@@ -10,8 +10,8 @@ import {
 } from 'typeorm';
 import { UserRole } from '../user-role.enum';
 import { SubjectDetails } from '../../subject-details/entities/subject-detail.entity';
-import { AdvisoryAttendance } from 'src/advisory-attendance/entities/advisory-attendance.entity';
-import { Advisory } from 'src/advisories/entities/advisory.entity';
+import { AdvisoryAttendance } from '../../advisory-attendance/entities/advisory-attendance.entity';
+import { Advisory } from '../../advisories/entities/advisory.entity';
 
 @Entity('users')
 export class User {

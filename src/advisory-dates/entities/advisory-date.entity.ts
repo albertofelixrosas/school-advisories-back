@@ -1,6 +1,6 @@
-import { Advisory } from 'src/advisories/entities/advisory.entity';
-import { AdvisoryAttendance } from 'src/advisory-attendance/entities/advisory-attendance.entity';
-import { Venue } from 'src/venues/entities/venue.entity';
+import { Advisory } from '../../advisories/entities/advisory.entity';
+import { AdvisoryAttendance } from '../../advisory-attendance/entities/advisory-attendance.entity';
+import { Venue } from '../../venues/entities/venue.entity';
 import {
   Column,
   Entity,
