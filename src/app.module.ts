@@ -28,6 +28,7 @@ import { VenuesModule } from './venues/venues.module';
 import { SubjectsModule } from './subjects/subjects.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { SeedModule } from './seed/seed.module';
 import { AdvisoryAttendanceModule } from './advisory-attendance/advisory-attendance.module';
 import { AdvisoryAttendance } from './advisory-attendance/entities/advisory-attendance.entity';
 import { QueueModule } from './queue/queue.module';
@@ -112,6 +113,7 @@ import { ProfessorAvailability } from './professor-availability/entities/profess
     StudentInvitationsModule,
     NotificationModule,
     ProfessorAvailabilityModule,
+    SeedModule,
   ],
 })
 export class AppModule {}
