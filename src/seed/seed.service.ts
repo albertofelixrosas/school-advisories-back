@@ -39,7 +39,16 @@ export class SeedService {
 
   private async clearUsers() {
     console.log('🧹 Limpiando usuarios existentes...');
-    await this.usersRepo.delete({});
+    try {
+      // Usar clear() para eliminar todos los registros de la tabla
+      await this.usersRepo.clear();
+      console.log('🗑️ Tabla de usuarios limpiada exitosamente');
+    } catch (error) {
+      console.log(
+        '⚠️ Error limpiando usuarios, continuando con la creación...',
+      );
+      console.log('Error:', error.message);
+    }
   }
 
   private async createUsers(): Promise<User[]> {
