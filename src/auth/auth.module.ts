@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
 import { AuthController } from './auth.controller';
+import { GmailAuthController } from './gmail-auth.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { User } from '../users/entities/user.entity';
@@ -30,6 +31,6 @@ import { RefreshTokenRepository } from './repositories/refresh-token.repository'
     }),
   ],
   providers: [AuthService, ProfileService, JwtStrategy, RefreshTokenRepository],
-  controllers: [AuthController],
+  controllers: [AuthController, GmailAuthController],
 })
 export class AuthModule {}
