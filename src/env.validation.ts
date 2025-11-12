@@ -14,11 +14,13 @@ export const validationSchema = Joi.object({
   DB_NAME: Joi.string().required(),
   FRONTEND_URL: Joi.string().uri().required(),
 
-  // Email Configuration
-  SMTP_HOST: Joi.string().required(),
-  SMTP_PORT: Joi.number().required(),
-  SMTP_USER: Joi.string().email().required(),
-  SMTP_PASS: Joi.string().required(),
+  // Gmail API Configuration
+  GOOGLE_CLIENT_ID: Joi.string().required(),
+  GOOGLE_CLIENT_SECRET: Joi.string().required(),
+  GOOGLE_REFRESH_TOKEN: Joi.string().required(),
+  GOOGLE_REDIRECT_URI: Joi.string()
+    .uri()
+    .default('https://developers.google.com/oauthplayground'),
   FROM_EMAIL: Joi.string().email().required(),
   FROM_NAME: Joi.string().required(),
 

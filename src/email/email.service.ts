@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
-import { Transporter } from 'nodemailer';
+import { google } from 'googleapis';
+import { OAuth2Client } from 'google-auth-library';
 
 export interface EmailOptions {
   to: string;
@@ -13,52 +13,70 @@ export interface EmailOptions {
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private transporter: Transporter;
+  private oauth2Client: OAuth2Client;
+  private gmail: any;
 
   constructor(private configService: ConfigService) {
-    this.createTransporter();
+    this.initializeGmailAPI();
   }
 
-  private createTransporter() {
-    const config = {
-      host: this.configService.get('SMTP_HOST'),
-      port: this.configService.get('SMTP_PORT'),
-      secure: this.configService.get('SMTP_PORT') === 465, // true for 465, false for other ports
-      auth: {
-        user: this.configService.get('SMTP_USER'),
-        pass: this.configService.get('SMTP_PASS'),
-      },
-    };
+  private initializeGmailAPI() {
+    try {
+      this.oauth2Client = new google.auth.OAuth2(
+        this.configService.get('GOOGLE_CLIENT_ID'),
+        this.configService.get('GOOGLE_CLIENT_SECRET'),
+        this.configService.get('GOOGLE_REDIRECT_URI'),
+      );
 
-    this.transporter = nodemailer.createTransport(config);
+      this.oauth2Client.setCredentials({
+        refresh_token: this.configService.get('GOOGLE_REFRESH_TOKEN'),
+      });
 
-    // Verify connection configuration
-    this.transporter.verify((error) => {
-      if (error) {
-        this.logger.error('Email service configuration error:', error);
-      } else {
-        this.logger.log('Email service is ready to send messages');
-      }
-    });
+      this.gmail = google.gmail({ version: 'v1', auth: this.oauth2Client });
+
+      this.logger.log('Gmail API service initialized successfully');
+    } catch (error) {
+      this.logger.error('Failed to initialize Gmail API:', error);
+      throw error;
+    }
+  }
+
+  private createEmailMessage(options: EmailOptions): string {
+    const fromEmail = this.configService.get('FROM_EMAIL');
+    const fromName =
+      this.configService.get('FROM_NAME') || 'Sistema de Asesorías';
+
+    const emailLines = [
+      `To: ${options.to}`,
+      `From: "${fromName}" <${fromEmail}>`,
+      `Subject: ${options.subject}`,
+      'MIME-Version: 1.0',
+      'Content-Type: text/html; charset=utf-8',
+      '',
+      options.html,
+    ];
+
+    return emailLines.join('\r\n');
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
     try {
-      const mailOptions = {
-        from: {
-          name: this.configService.get('FROM_NAME') || 'Sistema de Asesorías',
-          address: this.configService.get('FROM_EMAIL'),
-        },
-        to: options.to,
-        subject: options.subject,
-        html: options.html,
-        text: options.text || options.html.replace(/<[^>]*>/g, ''), // Strip HTML for text version
-      };
+      const emailMessage = this.createEmailMessage(options);
+      const encodedMessage = Buffer.from(emailMessage)
+        .toString('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
 
-      const result = await this.transporter.sendMail(mailOptions);
+      const result = await this.gmail.users.messages.send({
+        userId: 'me',
+        requestBody: {
+          raw: encodedMessage,
+        },
+      });
 
       this.logger.log(
-        `Email sent successfully to ${options.to}: ${result.messageId}`,
+        `Email sent successfully to ${options.to}: ${result.data.id}`,
       );
       return true;
     } catch (error) {
@@ -133,5 +151,24 @@ export class EmailService {
       subject: `Notificación del Sistema de Asesorías - ${templateKey}`,
       html: `<p>Esta es una notificación del sistema. Tipo: ${templateKey}</p><pre>${JSON.stringify(variables, null, 2)}</pre>`,
     });
+  }
+
+  /**
+   * Verifica la conectividad con la API de Gmail
+   */
+  async verifyConnection(): Promise<boolean> {
+    try {
+      const response = await this.gmail.users.getProfile({
+        userId: 'me',
+      });
+
+      this.logger.log(
+        `Gmail API connection verified for: ${response.data.emailAddress}`,
+      );
+      return true;
+    } catch (error) {
+      this.logger.error('Failed to verify Gmail API connection:', error);
+      return false;
+    }
   }
 }
