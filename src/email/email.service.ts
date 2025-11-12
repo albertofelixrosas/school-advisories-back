@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { google } from 'googleapis';
+import { google, gmail_v1 } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 
 export interface EmailOptions {
@@ -14,7 +14,7 @@ export interface EmailOptions {
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private oauth2Client: OAuth2Client;
-  private gmail: any;
+  private gmail: gmail_v1.Gmail;
 
   constructor(private configService: ConfigService) {
     this.initializeGmailAPI();
@@ -116,7 +116,7 @@ export class EmailService {
    */
   async sendTemplatedEmail(
     template: string,
-    variables: Record<string, any>,
+    variables: Record<string, unknown>,
     to: string,
     subject: string,
   ): Promise<boolean> {
@@ -125,7 +125,22 @@ export class EmailService {
       let html = template;
       Object.keys(variables).forEach((key) => {
         const regex = new RegExp(`{{${key}}}`, 'g');
-        html = html.replace(regex, variables[key] || '');
+        const value = variables[key];
+        let stringValue = '';
+
+        if (value !== null && value !== undefined) {
+          if (
+            typeof value === 'string' ||
+            typeof value === 'number' ||
+            typeof value === 'boolean'
+          ) {
+            stringValue = String(value);
+          } else if (typeof value === 'object') {
+            stringValue = JSON.stringify(value);
+          }
+        }
+
+        html = html.replace(regex, stringValue);
       });
 
       return await this.sendEmail({
@@ -142,7 +157,7 @@ export class EmailService {
   async sendTemplate(
     templateKey: string,
     to: string,
-    variables: Record<string, any>,
+    variables: Record<string, unknown>,
   ): Promise<boolean> {
     // Esta función se implementará cuando tengamos el sistema de plantillas
     // Por ahora solo enviamos un email básico
