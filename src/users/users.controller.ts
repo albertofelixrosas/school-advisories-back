@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Param,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import {
@@ -17,12 +18,16 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
+import { AdminDashboardStatsDto } from './dto/admin-dashboard-stats.dto';
 import { Roles } from '../auth/roles.decorator';
 import { UserRole } from './user-role.enum';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
 
 @ApiTags('Users')
 @Controller('users')
@@ -72,6 +77,23 @@ export class UsersController {
   @ApiOkResponse({ description: 'Lista de usuarios con rol profesor' })
   findAllProfessors() {
     return this.usersService.findByRole(UserRole.PROFESSOR);
+  }
+
+  @Get('admin/dashboard/stats')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth('jwt-auth')
+  @ApiOperation({
+    summary: 'Get comprehensive dashboard statistics (Admin only)',
+    description:
+      'Returns comprehensive statistics including users, advisories, sessions, requests, attendance, subjects, and top performers',
+  })
+  @ApiOkResponse({
+    description: 'Dashboard statistics retrieved successfully',
+    type: AdminDashboardStatsDto,
+  })
+  async getAdminDashboardStats() {
+    return this.usersService.getAdminDashboardStats();
   }
 
   @Get('students/:studentId/subjects')

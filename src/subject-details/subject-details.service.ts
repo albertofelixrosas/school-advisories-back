@@ -343,4 +343,23 @@ export class SubjectDetailsService {
       total_students_served: parseInt(stat.total_students_served) || 0,
     }));
   }
+
+  /**
+   * Toggle the active status of a subject detail assignment
+   */
+  async toggleStatus(id: number): Promise<SubjectDetails> {
+    const detail = await this.detailsRepo.findOne({
+      where: { subject_detail_id: id },
+      relations: ['subject', 'professor', 'schedules'],
+    });
+
+    if (!detail) {
+      throw new NotFoundException(`SubjectDetail with id ${id} not found`);
+    }
+
+    // Toggle the status
+    detail.is_active = !detail.is_active;
+
+    return await this.detailsRepo.save(detail);
+  }
 }

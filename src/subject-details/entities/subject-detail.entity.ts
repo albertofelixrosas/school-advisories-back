@@ -5,6 +5,8 @@ import {
   ManyToOne,
   OneToMany,
   JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Subject } from '../../subjects/entities/subject.entity';
 import { SubjectSchedule } from '../../subject-schedules/entities/subject-schedule.entity';
@@ -21,6 +23,15 @@ export class SubjectDetails {
 
   @Column()
   professor_id: number;
+
+  @Column({ default: true })
+  is_active: boolean;
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
 
   @ManyToOne(() => Subject, (subject) => subject.details)
   @JoinColumn({ name: 'subject_id' })

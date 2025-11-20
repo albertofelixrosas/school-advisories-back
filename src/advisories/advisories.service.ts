@@ -434,4 +434,172 @@ export class AdvisoriesService {
       `Students ${studentIds.join(', ')} can be invited to session ${advisoryDateId} using the invitation endpoints`,
     );
   }
+
+  async getSessionStudents(sessionId: number) {
+    // Find the advisory date (session) with all relations
+    const session = await this.advisoryDateRepo.findOne({
+      where: { advisory_date_id: sessionId },
+      relations: [
+        'advisory',
+        'advisory.subject_detail',
+        'advisory.subject_detail.subject',
+        'advisory.subject_detail.professor',
+        'venue',
+        'attendances',
+        'attendances.student',
+      ],
+    });
+
+    if (!session) {
+      throw new NotFoundException(
+        `Session with ID ${sessionId} not found`,
+      );
+    }
+
+    // Get all students from attendance records
+    const students = session.attendances.map((attendance) => ({
+      user_id: attendance.student.user_id,
+      student_id: attendance.student.student_id,
+      name: attendance.student.name,
+      last_name: attendance.student.last_name,
+      email: attendance.student.email,
+      photo_url: attendance.student.photo_url,
+      phone_number: attendance.student.phone_number,
+      attended: attendance.attended,
+      attendance_notes: attendance.notes,
+      join_type: 'attendance' as const, // All students in attendance are registered
+    }));
+
+    const totalStudents = students.length;
+    const attendedCount = students.filter((s) => s.attended).length;
+    const absentCount = totalStudents - attendedCount;
+    const attendanceRate =
+      totalStudents > 0 ? (attendedCount / totalStudents) * 100 : 0;
+
+    return {
+      session: {
+        advisory_date_id: session.advisory_date_id,
+        advisory_id: session.advisory_id,
+        topic: session.topic,
+        date: session.date,
+        notes: session.notes,
+        session_link: session.session_link,
+        venue: {
+          venue_id: session.venue.venue_id,
+          building: session.venue.building || 'N/A',
+          classroom: session.venue.name,
+          capacity: 0, // Not available in current schema
+        },
+        subject: {
+          subject_id: session.advisory.subject_detail.subject.subject_id,
+          subject_name: session.advisory.subject_detail.subject.subject,
+        },
+        professor: {
+          user_id: session.advisory.subject_detail.professor.user_id,
+          name: session.advisory.subject_detail.professor.name,
+          last_name: session.advisory.subject_detail.professor.last_name,
+          email: session.advisory.subject_detail.professor.email,
+          photo_url: session.advisory.subject_detail.professor.photo_url,
+        },
+        max_students: session.advisory.max_students,
+        completed_at: session.completed_at,
+      },
+      students,
+      total_students: totalStudents,
+      attended_count: attendedCount,
+      absent_count: absentCount,
+      attendance_rate: Math.round(attendanceRate * 100) / 100,
+    };
+  }
+
+  async getFullSessionDetails(sessionId: number) {
+    // Find the advisory date with ALL relations
+    const session = await this.advisoryDateRepo.findOne({
+      where: { advisory_date_id: sessionId },
+      relations: [
+        'advisory',
+        'advisory.subject_detail',
+        'advisory.subject_detail.subject',
+        'advisory.subject_detail.professor',
+        'advisory.subject_detail.schedules',
+        'advisory.schedules',
+        'venue',
+        'attendances',
+        'attendances.student',
+      ],
+    });
+
+    if (!session) {
+      throw new NotFoundException(`Session with ID ${sessionId} not found`);
+    }
+
+    const now = new Date();
+    const sessionDate = new Date(session.date);
+    const isCompleted = !!session.completed_at;
+    const isUpcoming = sessionDate > now && !isCompleted;
+
+    const attendances = session.attendances.map((att) => ({
+      student_id: att.student.user_id,
+      student_enrollment_id: att.student.student_id,
+      student_name: att.student.name,
+      student_last_name: att.student.last_name,
+      attended: att.attended,
+      notes: att.notes,
+    }));
+
+    const registeredCount = attendances.length;
+    const attendedCount = attendances.filter((a) => a.attended).length;
+    const attendanceRate =
+      registeredCount > 0 ? (attendedCount / registeredCount) * 100 : 0;
+
+    return {
+      advisory_date_id: session.advisory_date_id,
+      advisory_id: session.advisory_id,
+      topic: session.topic,
+      date: session.date,
+      notes: session.notes,
+      session_link: session.session_link,
+      completed_at: session.completed_at,
+      created_at: session.created_at,
+      updated_at: session.updated_at,
+      venue: {
+        venue_id: session.venue.venue_id,
+        building: session.venue.building || 'N/A',
+        classroom: session.venue.name,
+        capacity: 0, // Not available in current schema
+      },
+      subject: {
+        subject_id: session.advisory.subject_detail.subject.subject_id,
+        subject_name: session.advisory.subject_detail.subject.subject,
+        schedules: session.advisory.subject_detail.schedules.map((s) => ({
+          day: s.day,
+          start_time: s.start_time,
+          end_time: s.end_time,
+        })),
+      },
+      professor: {
+        user_id: session.advisory.subject_detail.professor.user_id,
+        name: session.advisory.subject_detail.professor.name,
+        last_name: session.advisory.subject_detail.professor.last_name,
+        email: session.advisory.subject_detail.professor.email,
+        photo_url: session.advisory.subject_detail.professor.photo_url,
+        phone_number: session.advisory.subject_detail.professor.phone_number,
+      },
+      max_students: session.advisory.max_students,
+      advisory_schedules: session.advisory.schedules.map((s) => ({
+        advisory_schedule_id: s.advisory_schedule_id,
+        day: s.day,
+        begin_time: s.begin_time,
+        end_time: s.end_time,
+      })),
+      attendances,
+      registered_students_count: registeredCount,
+      attended_count: attendedCount,
+      attendance_rate: Math.round(attendanceRate * 100) / 100,
+      is_completed: isCompleted,
+      is_upcoming: isUpcoming,
+    };
+  }
 }
+
+

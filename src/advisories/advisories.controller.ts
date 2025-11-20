@@ -17,6 +17,8 @@ import { CreateAdvisoryDto } from './dto/create-advisory.dto';
 import { UpdateAdvisoryDto } from './dto/update-advisory.dto';
 import { CreateDirectSessionDto } from './dto/create-direct-session.dto';
 import { InviteStudentsDto } from './dto/invitation.dto';
+import { SessionStudentsResponseDto } from './dto/session-students.dto';
+import { FullSessionDetailsDto } from './dto/full-session-details.dto';
 import { InvitationService } from './services/invitation.service';
 import {
   ApiTags,
@@ -370,6 +372,50 @@ export class AdvisoriesController {
       );
     } catch (error) {
       console.error('Error al obtener invitaciones:', error);
+      throw error;
+    }
+  }
+
+  @Get('sessions/:sessionId/students')
+  @Roles(UserRole.PROFESSOR, UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Get all students registered for a session',
+    description:
+      'Retrieves all students who are registered for a specific advisory session, including their attendance status',
+  })
+  @ApiOkResponse({
+    description: 'Students list retrieved successfully',
+    type: SessionStudentsResponseDto,
+  })
+  @ApiNotFoundResponse({ description: 'Session not found' })
+  async getSessionStudents(@Param('sessionId', ParseIntPipe) sessionId: number) {
+    try {
+      return await this.advisoriesService.getSessionStudents(sessionId);
+    } catch (error) {
+      console.error('Error al obtener estudiantes de la sesión:', error);
+      throw error;
+    }
+  }
+
+  @Get('sessions/:sessionId')
+  @Roles(UserRole.PROFESSOR, UserRole.ADMIN, UserRole.STUDENT)
+  @ApiOperation({
+    summary: 'Get full session details',
+    description:
+      'Retrieves comprehensive information about a session including venue, subject, professor, schedules, and attendance',
+  })
+  @ApiOkResponse({
+    description: 'Session details retrieved successfully',
+    type: FullSessionDetailsDto,
+  })
+  @ApiNotFoundResponse({ description: 'Session not found' })
+  async getFullSessionDetails(
+    @Param('sessionId', ParseIntPipe) sessionId: number,
+  ) {
+    try {
+      return await this.advisoriesService.getFullSessionDetails(sessionId);
+    } catch (error) {
+      console.error('Error al obtener detalles de la sesión:', error);
       throw error;
     }
   }

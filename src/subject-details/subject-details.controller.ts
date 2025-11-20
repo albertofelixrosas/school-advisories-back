@@ -231,4 +231,18 @@ export class SubjectDetailsController {
   remove(@Param('id') id: string) {
     return this.service.remove(+id);
   }
+
+  @Patch(':id/toggle-status')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Toggle active status of subject detail (Admin only)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Status toggled successfully',
+  })
+  @ApiResponse({ status: 404, description: 'Subject detail not found' })
+  async toggleStatus(@Param('id') id: string) {
+    return this.service.toggleStatus(+id);
+  }
 }
