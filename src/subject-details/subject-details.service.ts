@@ -79,13 +79,33 @@ export class SubjectDetailsService {
   }
 
   findAll() {
-    return this.detailsRepo.find({ relations: ['subject', 'schedules'] });
+    return this.detailsRepo.find({ 
+      relations: ['subject', 'schedules', 'professor'],
+      select: {
+        professor: {
+          user_id: true,
+          name: true,
+          last_name: true,
+          email: true,
+          photo_url: true,
+        }
+      }
+    });
   }
 
   findOne(id: number) {
     return this.detailsRepo.findOne({
       where: { subject_detail_id: id },
       relations: ['subject', 'schedules', 'professor'],
+      select: {
+        professor: {
+          user_id: true,
+          name: true,
+          last_name: true,
+          email: true,
+          photo_url: true,
+        }
+      }
     });
   }
 
@@ -174,7 +194,7 @@ export class SubjectDetailsService {
   async remove(id: number): Promise<void> {
     const assignment = await this.detailsRepo.findOne({
       where: { subject_detail_id: id },
-      relations: ['advisories'],
+      relations: ['advisories', 'schedules'],
     });
 
     if (!assignment) {
@@ -188,6 +208,14 @@ export class SubjectDetailsService {
       );
     }
 
+    // Eliminar primero los schedules asociados
+    if (assignment.schedules && assignment.schedules.length > 0) {
+      await this.subjectScheduleRepo.delete({
+        subject_details_id: id,
+      });
+    }
+
+    // Ahora eliminar el subject_detail
     await this.detailsRepo.delete(id);
   }
 
