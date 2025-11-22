@@ -55,18 +55,21 @@ export class CreateUserDto {
 
   @ApiProperty({
     example: 'https://firebasestorage.googleapis.com/...',
-    description: 'Contraseña del usuario',
+    description: 'URL de la foto de perfil del usuario',
+    required: false,
   })
+  @IsOptional()
   @IsString()
-  @Optional()
-  photo_url: string;
+  photo_url?: string;
 
   @ApiProperty({
     example: 2,
     description: 'ID de la escuela a la que pertenece el usuario',
+    required: false,
   })
+  @IsOptional()
   @IsInt()
-  school_id: number;
+  school_id?: number;
 
   @ApiProperty({
     example: 'ST2024001',
