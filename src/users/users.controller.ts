@@ -9,8 +9,10 @@ import {
   Param,
   Put,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
+import { RequestWithUser } from '../auth/types/request-with-user';
 import {
   ApiBadRequestResponse,
   ApiBody,
@@ -24,6 +26,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { AdminDashboardStatsDto } from './dto/admin-dashboard-stats.dto';
+import { ProfessorDashboardStatsDto } from './dto/professor-dashboard-stats.dto';
+import { StudentDashboardStatsDto } from './dto/student-dashboard-stats.dto';
 import { Roles } from '../auth/roles.decorator';
 import { UserRole } from './user-role.enum';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -94,6 +98,40 @@ export class UsersController {
   })
   async getAdminDashboardStats() {
     return this.usersService.getAdminDashboardStats();
+  }
+
+  @Get('professor/dashboard/stats')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PROFESSOR)
+  @ApiBearerAuth('jwt-auth')
+  @ApiOperation({
+    summary: 'Get professor dashboard statistics (Professor only)',
+    description:
+      'Returns professor-specific statistics including active advisories, pending requests, students helped, upcoming sessions, and performance metrics',
+  })
+  @ApiOkResponse({
+    description: 'Professor dashboard statistics retrieved successfully',
+    type: ProfessorDashboardStatsDto,
+  })
+  async getProfessorDashboardStats(@Req() req: RequestWithUser) {
+    return this.usersService.getProfessorDashboardStats(req.user.user_id);
+  }
+
+  @Get('student/dashboard/stats')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.STUDENT)
+  @ApiBearerAuth('jwt-auth')
+  @ApiOperation({
+    summary: 'Get student dashboard statistics (Student only)',
+    description:
+      'Returns student-specific statistics including active advisories, completed advisories, pending requests, recent activity, and learning metrics',
+  })
+  @ApiOkResponse({
+    description: 'Student dashboard statistics retrieved successfully',
+    type: StudentDashboardStatsDto,
+  })
+  async getStudentDashboardStats(@Req() req: RequestWithUser) {
+    return this.usersService.getStudentDashboardStats(req.user.user_id);
   }
 
   @Get('students/:studentId/subjects')
