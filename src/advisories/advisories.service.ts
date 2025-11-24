@@ -23,123 +23,248 @@ import { WeekDay } from '../common/week-day.enum';
 
 @Injectable()
 export class AdvisoriesService {
-        /**
-         * Búsqueda y ordenamiento de asesorías
-         */
-        async searchAdvisories(query: any) {
-          const qb = this.advisoryRepo.createQueryBuilder('advisory')
-            .leftJoinAndSelect('advisory.professor', 'professor')
-            .leftJoinAndSelect('advisory.subject_detail', 'subject_detail')
-            .leftJoinAndSelect('subject_detail.subject', 'subject')
-            .leftJoinAndSelect('advisory.schedules', 'schedules')
-            .leftJoinAndSelect('advisory.advisory_dates', 'advisory_dates');
-
-          // Texto libre (materia, profesor, topic)
-          if (query.q) {
-            qb.andWhere('subject.subject LIKE :q OR professor.name LIKE :q OR professor.last_name LIKE :q', { q: `%${query.q}%` });
-          }
-          // Materia específica
-          if (query.subject_id) {
-            qb.andWhere('subject.subject_id = :subject_id', { subject_id: query.subject_id });
-          }
-          // Profesor específico
-          if (query.professor_id) {
-            qb.andWhere('professor.user_id = :professor_id', { professor_id: query.professor_id });
-          }
-
-          // Ordenamiento
-          if (query.sort_by) {
-            let sortField = 'advisory_dates.date';
-            if (query.sort_by === 'subject') sortField = 'subject.subject';
-            if (query.sort_by === 'professor') sortField = 'professor.name';
-            if (query.sort_by === 'students') sortField = 'advisory.max_students';
-            qb.orderBy(sortField, query.order || 'ASC');
-          }
-
-          return qb.getMany();
-        }
-      /**
-       * Calcula estadísticas agregadas para un profesor
-       */
-      async getProfessorStats(professorId: number): Promise<any> {
-        // Total de asesorías
-        const totalAdvisories = await this.advisoryRepo.count({ where: { professor: { user_id: professorId } } });
-
-        // Total de sesiones
-        const advisories = await this.advisoryRepo.find({
-          where: { professor: { user_id: professorId } },
-          relations: ['advisory_dates', 'subject_detail', 'subject_detail.subject'],
-        });
-        const allSessions = advisories.flatMap(a => a.advisory_dates || []);
-        const totalSessions = allSessions.length;
-
-        // Sesiones próximas y completadas
-        const now = new Date();
-        const upcomingSessions = allSessions.filter(s => new Date(s.date) > now).length;
-        const completedSessions = allSessions.filter(s => new Date(s.date) <= now).length;
-
-        // Total de estudiantes atendidos
-        const totalStudents = allSessions.reduce((acc, s) => acc + (s.attendances?.length || 0), 0);
-
-        // Tasa promedio de asistencia
-        let averageAttendanceRate = 0;
-        if (totalSessions > 0) {
-          const rates = allSessions.map(s => {
-            const attended = (s.attendances || []).filter(a => a.attended).length;
-            const total = s.attendances?.length || 0;
-            return total > 0 ? attended / total : 0;
-          });
-          averageAttendanceRate = Math.round((rates.reduce((a, b) => a + b, 0) / rates.length) * 100);
-        }
-
-        // Sesiones por materia
-        const sessionsBySubject: Record<string, number> = {};
-        advisories.forEach(a => {
-          const subjectName = a.subject_detail?.subject?.subject || 'Sin materia';
-          sessionsBySubject[subjectName] = (sessionsBySubject[subjectName] || 0) + (a.advisory_dates?.length || 0);
-        });
-
-        // Sesiones esta semana y este mes
-        const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - now.getDay());
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6);
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-        const sessionsThisWeek = allSessions.filter(s => {
-          const d = new Date(s.date);
-          return d >= startOfWeek && d <= endOfWeek;
-        }).length;
-        const sessionsThisMonth = allSessions.filter(s => {
-          const d = new Date(s.date);
-          return d >= startOfMonth && d <= endOfMonth;
-        }).length;
-
-        return {
-          totalAdvisories,
-          totalSessions,
-          upcomingSessions,
-          completedSessions,
-          totalStudents,
-          averageAttendanceRate,
-          sessionsBySubject,
-          sessionsThisWeek,
-          sessionsThisMonth,
-        };
-      }
-    /**
-     * Devuelve todas las sesiones de asesoría (advisory_dates) de un profesor
-     */
-    async findSessionsByProfessor(professorId: number) {
-      // Buscar asesorías del profesor
-      const advisories = await this.advisoryRepo.find({
-        where: { professor: { user_id: professorId } },
-        relations: ['advisory_dates', 'advisory_dates.venue', 'advisory_dates.attendances'],
+  async getSessionsUpcoming(professorId: number, days: number = 7) {
+    const advisories = await this.advisoryRepo.find({
+      where: { professor: { user_id: professorId } },
+      relations: [
+        'advisory_dates',
+        'advisory_dates.venue',
+        'advisory_dates.attendances',
+      ],
+    });
+    const now = new Date();
+    const endDate = new Date(now);
+    endDate.setDate(now.getDate() + days);
+    return advisories
+      .flatMap((a) => a.advisory_dates || [])
+      .filter((s) => {
+        const d = new Date(s.date);
+        return d >= now && d <= endDate;
       });
-      // Extraer todas las sesiones (advisory_dates) de todas las asesorías
-      const sessions = advisories.flatMap(a => a.advisory_dates || []);
-      return sessions;
+  }
+
+  async getSessionsToday(professorId: number) {
+    const advisories = await this.advisoryRepo.find({
+      where: { professor: { user_id: professorId } },
+      relations: [
+        'advisory_dates',
+        'advisory_dates.venue',
+        'advisory_dates.attendances',
+      ],
+    });
+    const today = new Date();
+    return advisories
+      .flatMap((a) => a.advisory_dates || [])
+      .filter((s) => {
+        const d = new Date(s.date);
+        return (
+          d.getFullYear() === today.getFullYear() &&
+          d.getMonth() === today.getMonth() &&
+          d.getDate() === today.getDate()
+        );
+      });
+  }
+
+  async getSessionsThisWeek(professorId: number) {
+    const advisories = await this.advisoryRepo.find({
+      where: { professor: { user_id: professorId } },
+      relations: [
+        'advisory_dates',
+        'advisory_dates.venue',
+        'advisory_dates.attendances',
+      ],
+    });
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    return advisories
+      .flatMap((a) => a.advisory_dates || [])
+      .filter((s) => {
+        const d = new Date(s.date);
+        return d >= startOfWeek && d <= endOfWeek;
+      });
+  }
+
+  async getSessionsThisMonth(professorId: number) {
+    const advisories = await this.advisoryRepo.find({
+      where: { professor: { user_id: professorId } },
+      relations: [
+        'advisory_dates',
+        'advisory_dates.venue',
+        'advisory_dates.attendances',
+      ],
+    });
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return advisories
+      .flatMap((a) => a.advisory_dates || [])
+      .filter((s) => {
+        const d = new Date(s.date);
+        return d >= startOfMonth && d <= endOfMonth;
+      });
+  }
+
+  async getSessionsPast(professorId: number) {
+    const advisories = await this.advisoryRepo.find({
+      where: { professor: { user_id: professorId } },
+      relations: [
+        'advisory_dates',
+        'advisory_dates.venue',
+        'advisory_dates.attendances',
+      ],
+    });
+    const now = new Date();
+    return advisories
+      .flatMap((a) => a.advisory_dates || [])
+      .filter((s) => {
+        const d = new Date(s.date);
+        return d < now;
+      });
+  }
+  /**
+   * Búsqueda y ordenamiento de asesorías
+   */
+  async searchAdvisories(query: any) {
+    const qb = this.advisoryRepo
+      .createQueryBuilder('advisory')
+      .leftJoinAndSelect('advisory.professor', 'professor')
+      .leftJoinAndSelect('advisory.subject_detail', 'subject_detail')
+      .leftJoinAndSelect('subject_detail.subject', 'subject')
+      .leftJoinAndSelect('advisory.schedules', 'schedules')
+      .leftJoinAndSelect('advisory.advisory_dates', 'advisory_dates');
+
+    // Texto libre (materia, profesor, topic)
+    if (query.q) {
+      qb.andWhere(
+        'subject.subject LIKE :q OR professor.name LIKE :q OR professor.last_name LIKE :q',
+        { q: `%${query.q}%` },
+      );
     }
+    // Materia específica
+    if (query.subject_id) {
+      qb.andWhere('subject.subject_id = :subject_id', {
+        subject_id: query.subject_id,
+      });
+    }
+    // Profesor específico
+    if (query.professor_id) {
+      qb.andWhere('professor.user_id = :professor_id', {
+        professor_id: query.professor_id,
+      });
+    }
+
+    // Ordenamiento
+    if (query.sort_by) {
+      let sortField = 'advisory_dates.date';
+      if (query.sort_by === 'subject') sortField = 'subject.subject';
+      if (query.sort_by === 'professor') sortField = 'professor.name';
+      if (query.sort_by === 'students') sortField = 'advisory.max_students';
+      qb.orderBy(sortField, query.order || 'ASC');
+    }
+
+    return qb.getMany();
+  }
+  /**
+   * Calcula estadísticas agregadas para un profesor
+   */
+  async getProfessorStats(professorId: number): Promise<any> {
+    // Total de asesorías
+    const totalAdvisories = await this.advisoryRepo.count({
+      where: { professor: { user_id: professorId } },
+    });
+
+    // Total de sesiones
+    const advisories = await this.advisoryRepo.find({
+      where: { professor: { user_id: professorId } },
+      relations: ['advisory_dates', 'subject_detail', 'subject_detail.subject'],
+    });
+    const allSessions = advisories.flatMap((a) => a.advisory_dates || []);
+    const totalSessions = allSessions.length;
+
+    // Sesiones próximas y completadas
+    const now = new Date();
+    const upcomingSessions = allSessions.filter(
+      (s) => new Date(s.date) > now,
+    ).length;
+    const completedSessions = allSessions.filter(
+      (s) => new Date(s.date) <= now,
+    ).length;
+
+    // Total de estudiantes atendidos
+    const totalStudents = allSessions.reduce(
+      (acc, s) => acc + (s.attendances?.length || 0),
+      0,
+    );
+
+    // Tasa promedio de asistencia
+    let averageAttendanceRate = 0;
+    if (totalSessions > 0) {
+      const rates = allSessions.map((s) => {
+        const attended = (s.attendances || []).filter((a) => a.attended).length;
+        const total = s.attendances?.length || 0;
+        return total > 0 ? attended / total : 0;
+      });
+      averageAttendanceRate = Math.round(
+        (rates.reduce((a, b) => a + b, 0) / rates.length) * 100,
+      );
+    }
+
+    // Sesiones por materia
+    const sessionsBySubject: Record<string, number> = {};
+    advisories.forEach((a) => {
+      const subjectName = a.subject_detail?.subject?.subject || 'Sin materia';
+      sessionsBySubject[subjectName] =
+        (sessionsBySubject[subjectName] || 0) + (a.advisory_dates?.length || 0);
+    });
+
+    // Sesiones esta semana y este mes
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const sessionsThisWeek = allSessions.filter((s) => {
+      const d = new Date(s.date);
+      return d >= startOfWeek && d <= endOfWeek;
+    }).length;
+    const sessionsThisMonth = allSessions.filter((s) => {
+      const d = new Date(s.date);
+      return d >= startOfMonth && d <= endOfMonth;
+    }).length;
+
+    return {
+      totalAdvisories,
+      totalSessions,
+      upcomingSessions,
+      completedSessions,
+      totalStudents,
+      averageAttendanceRate,
+      sessionsBySubject,
+      sessionsThisWeek,
+      sessionsThisMonth,
+    };
+  }
+  /**
+   * Devuelve todas las sesiones de asesoría (advisory_dates) de un profesor
+   */
+  async findSessionsByProfessor(professorId: number) {
+    // Buscar asesorías del profesor
+    const advisories = await this.advisoryRepo.find({
+      where: { professor: { user_id: professorId } },
+      relations: [
+        'advisory_dates',
+        'advisory_dates.venue',
+        'advisory_dates.attendances',
+      ],
+    });
+    // Extraer todas las sesiones (advisory_dates) de todas las asesorías
+    const sessions = advisories.flatMap((a) => a.advisory_dates || []);
+    return sessions;
+  }
   constructor(
     @InjectRepository(Advisory)
     private readonly advisoryRepo: Repository<Advisory>,
@@ -411,11 +536,9 @@ export class AdvisoriesService {
     return advisories.map((advisory) => {
       // Filtrar sesiones si no se quieren las pasadas
       let sessions = advisory.advisory_dates || [];
-      
+
       if (!includePast) {
-        sessions = sessions.filter(
-          (session) => new Date(session.date) >= now,
-        );
+        sessions = sessions.filter((session) => new Date(session.date) >= now);
       }
 
       // Mapear sesiones a DTO
@@ -446,20 +569,24 @@ export class AdvisoriesService {
         };
       });
 
-      // Calcular estadísticas de sesiones
-      const totalSessions = mappedSessions.length;
-      const upcomingSessions = mappedSessions.filter((s) => s.is_upcoming).length;
-      const completedSessions = mappedSessions.filter((s) => s.is_completed).length;
+      // Mapear schedules a DTO
+      const mappedSchedules = (advisory.schedules || []).map((schedule) => ({
+        advisory_schedule_id: schedule.advisory_schedule_id,
+        day: schedule.day,
+        begin_time: schedule.begin_time,
+        end_time: schedule.end_time,
+      }));
 
       // Generar respuesta base de asesoría
       const baseResponse = this.generateAdvisoryResponse(advisory);
 
       return {
         ...baseResponse,
+        schedules: mappedSchedules,
         sessions: mappedSessions,
-        total_sessions: totalSessions,
-        upcoming_sessions: upcomingSessions,
-        completed_sessions: completedSessions,
+        total_sessions: mappedSessions.length,
+        upcoming_sessions: mappedSessions.filter((s) => s.is_upcoming).length,
+        completed_sessions: mappedSessions.filter((s) => s.is_completed).length,
       };
     });
   }
@@ -664,9 +791,7 @@ export class AdvisoriesService {
     });
 
     if (!session) {
-      throw new NotFoundException(
-        `Session with ID ${sessionId} not found`,
-      );
+      throw new NotFoundException(`Session with ID ${sessionId} not found`);
     }
 
     // Get all students from attendance records
@@ -814,5 +939,3 @@ export class AdvisoriesService {
     };
   }
 }
-
-

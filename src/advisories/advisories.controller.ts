@@ -8,7 +8,6 @@ import {
   Delete,
   ParseIntPipe,
   UseGuards,
-  NotFoundException,
   Request,
   Query,
 } from '@nestjs/common';
@@ -21,6 +20,8 @@ import { InviteStudentsDto } from './dto/invitation.dto';
 import { SessionStudentsResponseDto } from './dto/session-students.dto';
 import { FullSessionDetailsDto } from './dto/full-session-details.dto';
 import { AdvisoryWithSessionsDto } from './dto/advisory-with-sessions.dto';
+import { ProfessorStatsDto } from './dto/professor-stats.dto';
+import { OwnershipGuard } from '../auth/ownership.guard';
 import { InvitationService } from './services/invitation.service';
 import {
   ApiTags,
@@ -42,36 +43,102 @@ import { UserRole } from '../users/user-role.enum';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('advisories')
 export class AdvisoriesController {
-          @Get('search')
-          @Roles(UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT)
-          @ApiOperation({ summary: 'Buscar y ordenar asesorías/sesiones por texto, materia, profesor, fecha, estudiantes' })
-          @ApiOkResponse({ description: 'Resultados de búsqueda y ordenamiento' })
-          async searchAdvisories(@Query() query: import('./dto/search-advisories-query.dto').SearchAdvisoriesQueryDto) {
-            return await this.advisoriesService.searchAdvisories(query);
-          }
-        @Get('professor/:professorId/stats')
-        @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
-        @ApiOperation({ summary: 'Obtener estadísticas agregadas de asesorías y sesiones de un profesor' })
-        @ApiOkResponse({ description: 'Estadísticas agregadas', type: require('./dto/professor-stats.dto').ProfessorStatsDto })
-        async getProfessorStats(@Param('professorId', ParseIntPipe) professorId: number) {
-          return await this.advisoriesService.getProfessorStats(professorId);
-        }
-      @Get('my-sessions')
-      @Roles(UserRole.PROFESSOR)
-      @ApiOperation({ summary: 'Obtener sesiones propias del profesor autenticado' })
-      @ApiOkResponse({ description: 'Lista de sesiones propias' })
-      mySessions(@Request() req: RequestWithUser) {
-        // El usuario autenticado es profesor, filtrar por su user_id
-        return this.advisoriesService.findSessionsByProfessor(req.user.user_id);
-      }
-    @Get('my-advisories')
-    @Roles(UserRole.PROFESSOR)
-    @ApiOperation({ summary: 'Obtener asesorías propias del profesor autenticado' })
-    @ApiOkResponse({ description: 'Lista de asesorías propias' })
-    myAdvisories(@Request() req: RequestWithUser) {
-      // El usuario autenticado es profesor, filtrar por su user_id
-      return this.advisoriesService.findByProfessor(req.user.user_id);
-    }
+  @Get('professor/:id/sessions/upcoming')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
+  @ApiOperation({
+    summary: 'Obtener sesiones próximas del profesor en los siguientes días',
+  })
+  @ApiOkResponse({ description: 'Sesiones próximas' })
+  async getUpcomingSessions(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('days') days?: number,
+  ) {
+    return await this.advisoriesService.getSessionsUpcoming(id, days || 7);
+  }
+
+  @Get('professor/:id/sessions/today')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
+  @ApiOperation({ summary: 'Obtener sesiones de asesoría de hoy del profesor' })
+  @ApiOkResponse({ description: 'Sesiones de hoy' })
+  async getTodaySessions(@Param('id', ParseIntPipe) id: number) {
+    return await this.advisoriesService.getSessionsToday(id);
+  }
+
+  @Get('professor/:id/sessions/this-week')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
+  @ApiOperation({
+    summary: 'Obtener sesiones de asesoría de esta semana del profesor',
+  })
+  @ApiOkResponse({ description: 'Sesiones de esta semana' })
+  async getWeekSessions(@Param('id', ParseIntPipe) id: number) {
+    return await this.advisoriesService.getSessionsThisWeek(id);
+  }
+
+  @Get('professor/:id/sessions/this-month')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
+  @ApiOperation({
+    summary: 'Obtener sesiones de asesoría de este mes del profesor',
+  })
+  @ApiOkResponse({ description: 'Sesiones de este mes' })
+  async getMonthSessions(@Param('id', ParseIntPipe) id: number) {
+    return await this.advisoriesService.getSessionsThisMonth(id);
+  }
+
+  @Get('professor/:id/sessions/past')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
+  @ApiOperation({ summary: 'Obtener sesiones pasadas del profesor' })
+  @ApiOkResponse({ description: 'Sesiones pasadas' })
+  async getPastSessions(@Param('id', ParseIntPipe) id: number) {
+    return await this.advisoriesService.getSessionsPast(id);
+  }
+  @Get('search')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT)
+  @ApiOperation({
+    summary:
+      'Buscar y ordenar asesorías/sesiones por texto, materia, profesor, fecha, estudiantes',
+  })
+  @ApiOkResponse({ description: 'Resultados de búsqueda y ordenamiento' })
+  async searchAdvisories(
+    @Query()
+    query: import('./dto/search-advisories-query.dto').SearchAdvisoriesQueryDto,
+  ) {
+    return await this.advisoriesService.searchAdvisories(query);
+  }
+  @Get('professor/:professorId/stats')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
+  @ApiOperation({
+    summary:
+      'Obtener estadísticas agregadas de asesorías y sesiones de un profesor',
+  })
+  @ApiOkResponse({
+    description: 'Estadísticas agregadas',
+    type: ProfessorStatsDto,
+  })
+  async getProfessorStats(
+    @Param('professorId', ParseIntPipe) professorId: number,
+  ) {
+    return await this.advisoriesService.getProfessorStats(professorId);
+  }
+  @Get('my-sessions')
+  @Roles(UserRole.PROFESSOR)
+  @ApiOperation({
+    summary: 'Obtener sesiones propias del profesor autenticado',
+  })
+  @ApiOkResponse({ description: 'Lista de sesiones propias' })
+  mySessions(@Request() req: RequestWithUser) {
+    // El usuario autenticado es profesor, filtrar por su user_id
+    return this.advisoriesService.findSessionsByProfessor(req.user.user_id);
+  }
+  @Get('my-advisories')
+  @Roles(UserRole.PROFESSOR)
+  @ApiOperation({
+    summary: 'Obtener asesorías propias del profesor autenticado',
+  })
+  @ApiOkResponse({ description: 'Lista de asesorías propias' })
+  myAdvisories(@Request() req: RequestWithUser) {
+    // El usuario autenticado es profesor, filtrar por su user_id
+    return this.advisoriesService.findByProfessor(req.user.user_id);
+  }
   constructor(
     private readonly advisoriesService: AdvisoriesService,
     private readonly invitationService: InvitationService,
@@ -97,7 +164,7 @@ export class AdvisoriesController {
 
   @Get('professor/:professorId')
   @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
-  @UseGuards(require('../auth/ownership.guard').OwnershipGuard)
+  @UseGuards(OwnershipGuard)
   @ApiOperation({
     summary: 'Obtener todas las asesorías de un profesor específico',
     description:
@@ -320,7 +387,9 @@ export class AdvisoriesController {
     type: SessionStudentsResponseDto,
   })
   @ApiNotFoundResponse({ description: 'Session not found' })
-  async getSessionStudents(@Param('sessionId', ParseIntPipe) sessionId: number) {
+  async getSessionStudents(
+    @Param('sessionId', ParseIntPipe) sessionId: number,
+  ) {
     return await this.advisoriesService.getSessionStudents(sessionId);
   }
 
