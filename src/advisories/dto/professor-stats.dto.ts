@@ -19,7 +19,12 @@ export class ProfessorStatsDto {
   @ApiProperty({ description: 'Tasa promedio de asistencia (%)' })
   averageAttendanceRate: number;
 
-  @ApiProperty({ description: 'Sesiones por materia', type: 'object', example: { "Matemáticas": 5, "Física": 3 } })
+  @ApiProperty({
+    description: 'Sesiones por materia',
+    type: 'object',
+    example: { Matemáticas: 5, Física: 3 },
+    additionalProperties: { type: 'number' },
+  })
   sessionsBySubject: Record<string, number>;
 
   @ApiProperty({ description: 'Sesiones esta semana' })
