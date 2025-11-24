@@ -42,6 +42,20 @@ import { UserRole } from '../users/user-role.enum';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('advisories')
 export class AdvisoriesController {
+          @Get('search')
+          @Roles(UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT)
+          @ApiOperation({ summary: 'Buscar y ordenar asesorías/sesiones por texto, materia, profesor, fecha, estudiantes' })
+          @ApiOkResponse({ description: 'Resultados de búsqueda y ordenamiento' })
+          async searchAdvisories(@Query() query: import('./dto/search-advisories-query.dto').SearchAdvisoriesQueryDto) {
+            return await this.advisoriesService.searchAdvisories(query);
+          }
+        @Get('professor/:professorId/stats')
+        @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
+        @ApiOperation({ summary: 'Obtener estadísticas agregadas de asesorías y sesiones de un profesor' })
+        @ApiOkResponse({ description: 'Estadísticas agregadas', type: require('./dto/professor-stats.dto').ProfessorStatsDto })
+        async getProfessorStats(@Param('professorId', ParseIntPipe) professorId: number) {
+          return await this.advisoriesService.getProfessorStats(professorId);
+        }
       @Get('my-sessions')
       @Roles(UserRole.PROFESSOR)
       @ApiOperation({ summary: 'Obtener sesiones propias del profesor autenticado' })
