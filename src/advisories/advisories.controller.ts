@@ -42,6 +42,22 @@ import { UserRole } from '../users/user-role.enum';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('advisories')
 export class AdvisoriesController {
+      @Get('my-sessions')
+      @Roles(UserRole.PROFESSOR)
+      @ApiOperation({ summary: 'Obtener sesiones propias del profesor autenticado' })
+      @ApiOkResponse({ description: 'Lista de sesiones propias' })
+      mySessions(@Request() req: RequestWithUser) {
+        // El usuario autenticado es profesor, filtrar por su user_id
+        return this.advisoriesService.findSessionsByProfessor(req.user.user_id);
+      }
+    @Get('my-advisories')
+    @Roles(UserRole.PROFESSOR)
+    @ApiOperation({ summary: 'Obtener asesorías propias del profesor autenticado' })
+    @ApiOkResponse({ description: 'Lista de asesorías propias' })
+    myAdvisories(@Request() req: RequestWithUser) {
+      // El usuario autenticado es profesor, filtrar por su user_id
+      return this.advisoriesService.findByProfessor(req.user.user_id);
+    }
   constructor(
     private readonly advisoriesService: AdvisoriesService,
     private readonly invitationService: InvitationService,
@@ -66,7 +82,8 @@ export class AdvisoriesController {
   }
 
   @Get('professor/:professorId')
-  @Roles(UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT)
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
+  @UseGuards(require('../auth/ownership.guard').OwnershipGuard)
   @ApiOperation({
     summary: 'Obtener todas las asesorías de un profesor específico',
     description:

@@ -23,6 +23,19 @@ import { WeekDay } from '../common/week-day.enum';
 
 @Injectable()
 export class AdvisoriesService {
+    /**
+     * Devuelve todas las sesiones de asesoría (advisory_dates) de un profesor
+     */
+    async findSessionsByProfessor(professorId: number) {
+      // Buscar asesorías del profesor
+      const advisories = await this.advisoryRepo.find({
+        where: { professor: { user_id: professorId } },
+        relations: ['advisory_dates', 'advisory_dates.venue', 'advisory_dates.attendances'],
+      });
+      // Extraer todas las sesiones (advisory_dates) de todas las asesorías
+      const sessions = advisories.flatMap(a => a.advisory_dates || []);
+      return sessions;
+    }
   constructor(
     @InjectRepository(Advisory)
     private readonly advisoryRepo: Repository<Advisory>,
