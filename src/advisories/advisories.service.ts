@@ -18,6 +18,7 @@ import { Venue } from '../venues/entities/venue.entity';
 import { UserRole } from '../users/user-role.enum';
 import { AdvisoryStatus } from './advisory-status.enum';
 import { AdvisoryResponseDto } from './dto/advisory-response.dto';
+import { AdvisoryWithSessionsDto } from './dto/advisory-with-sessions.dto';
 import { WeekDay } from '../common/week-day.enum';
 
 @Injectable()
@@ -249,6 +250,101 @@ export class AdvisoriesService {
     return advisories.map((advisory) =>
       this.generateAdvisoryResponse(advisory),
     );
+  }
+
+  async findByProfessorWithSessions(
+    professorId: number,
+    includePast: boolean = true,
+  ): Promise<AdvisoryWithSessionsDto[]> {
+    // Verificar que el profesor existe
+    const professor = await this.userRepo.findOne({
+      where: { user_id: professorId, role: UserRole.PROFESSOR },
+    });
+
+    if (!professor) {
+      throw new NotFoundException(
+        `Professor with id ${professorId} not found or is not a professor`,
+      );
+    }
+
+    // Obtener todas las asesorías del profesor con relaciones completas incluyendo sesiones
+    const advisories = await this.advisoryRepo.find({
+      where: { professor_id: professorId },
+      relations: [
+        'professor',
+        'subject_detail',
+        'subject_detail.subject',
+        'subject_detail.schedules',
+        'schedules',
+        'advisory_dates',
+        'advisory_dates.venue',
+        'advisory_dates.attendances',
+      ],
+      order: {
+        advisory_id: 'DESC',
+        advisory_dates: {
+          date: 'ASC', // Sesiones ordenadas por fecha ascendente
+        },
+      },
+    });
+
+    const now = new Date();
+
+    // Mapear a DTOs con sesiones incluidas
+    return advisories.map((advisory) => {
+      // Filtrar sesiones si no se quieren las pasadas
+      let sessions = advisory.advisory_dates || [];
+      
+      if (!includePast) {
+        sessions = sessions.filter(
+          (session) => new Date(session.date) >= now,
+        );
+      }
+
+      // Mapear sesiones a DTO
+      const mappedSessions = sessions.map((session) => {
+        const sessionDate = new Date(session.date);
+        const isUpcoming = sessionDate >= now && !session.completed_at;
+        const isCompleted = !!session.completed_at;
+        const attendancesCount = session.attendances?.length || 0;
+        const attendedCount =
+          session.attendances?.filter((a) => a.attended).length || 0;
+
+        return {
+          advisory_date_id: session.advisory_date_id,
+          topic: session.topic,
+          date: session.date,
+          notes: session.notes,
+          session_link: session.session_link,
+          completed_at: session.completed_at,
+          venue: {
+            venue_id: session.venue.venue_id,
+            building: session.venue.building || 'N/A',
+            name: session.venue.name,
+          },
+          attendances_count: attendancesCount,
+          attended_count: attendedCount,
+          is_upcoming: isUpcoming,
+          is_completed: isCompleted,
+        };
+      });
+
+      // Calcular estadísticas de sesiones
+      const totalSessions = mappedSessions.length;
+      const upcomingSessions = mappedSessions.filter((s) => s.is_upcoming).length;
+      const completedSessions = mappedSessions.filter((s) => s.is_completed).length;
+
+      // Generar respuesta base de asesoría
+      const baseResponse = this.generateAdvisoryResponse(advisory);
+
+      return {
+        ...baseResponse,
+        sessions: mappedSessions,
+        total_sessions: totalSessions,
+        upcoming_sessions: upcomingSessions,
+        completed_sessions: completedSessions,
+      };
+    });
   }
 
   async remove(id: number): Promise<AdvisoryResponseDto> {

@@ -10,6 +10,7 @@ import {
   UseGuards,
   NotFoundException,
   Request,
+  Query,
 } from '@nestjs/common';
 import { RequestWithUser } from '../auth/types/request-with-user';
 import { AdvisoriesService } from './advisories.service';
@@ -19,6 +20,7 @@ import { CreateDirectSessionDto } from './dto/create-direct-session.dto';
 import { InviteStudentsDto } from './dto/invitation.dto';
 import { SessionStudentsResponseDto } from './dto/session-students.dto';
 import { FullSessionDetailsDto } from './dto/full-session-details.dto';
+import { AdvisoryWithSessionsDto } from './dto/advisory-with-sessions.dto';
 import { InvitationService } from './services/invitation.service';
 import {
   ApiTags,
@@ -28,6 +30,7 @@ import {
   ApiBadRequestResponse,
   ApiNotFoundResponse,
   ApiBearerAuth,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -166,6 +169,58 @@ export class AdvisoriesController {
       return {
         statusCode: 500,
         message: 'Error interno del servidor al obtener las asesorías',
+        error: 'Internal Server Error',
+      };
+    }
+  }
+
+  @Get('professor/:professorId/with-sessions')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT)
+  @ApiOperation({
+    summary: 'Obtener asesorías de un profesor con sus sesiones incluidas',
+    description:
+      'Obtiene todas las asesorías de un profesor incluyendo las sesiones (advisory_dates) con información de venue y asistencias. Este endpoint optimiza el número de llamadas HTTP al incluir toda la información en una sola respuesta.',
+  })
+  @ApiQuery({
+    name: 'include_past',
+    required: false,
+    type: Boolean,
+    description:
+      'Si es true, incluye sesiones pasadas. Si es false, solo sesiones futuras. Por defecto es true.',
+  })
+  @ApiOkResponse({
+    description: 'Asesorías con sesiones obtenidas exitosamente',
+    type: [AdvisoryWithSessionsDto],
+  })
+  @ApiNotFoundResponse({ description: 'Profesor no encontrado' })
+  async findByProfessorWithSessions(
+    @Param('professorId', ParseIntPipe) professorId: number,
+    @Query('include_past') includePast?: string,
+  ) {
+    try {
+      const includePastBool = includePast === 'false' ? false : true;
+      return await this.advisoriesService.findByProfessorWithSessions(
+        professorId,
+        includePastBool,
+      );
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return {
+          statusCode: 404,
+          message: error.message,
+          error: 'Not Found',
+        };
+      }
+      if (error instanceof Error) {
+        console.error(
+          'Error al obtener asesorías con sesiones del profesor:',
+          error.message,
+        );
+      }
+      return {
+        statusCode: 500,
+        message:
+          'Error interno del servidor al obtener las asesorías con sesiones',
         error: 'Internal Server Error',
       };
     }
