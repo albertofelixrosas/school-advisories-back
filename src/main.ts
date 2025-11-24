@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
+import { GlobalHttpExceptionFilter } from './common/filters/global-http-exception.filter';
 import { SwaggerTheme, SwaggerThemeNameEnum } from 'swagger-themes';
 
 async function bootstrap() {
@@ -25,6 +26,9 @@ async function bootstrap() {
       transform: true, // Convierte tipos automáticamente (por ejemplo, de string a number)
     }),
   );
+
+  // Registrar Exception Filter global para formato estándar de errores
+  app.useGlobalFilters(new GlobalHttpExceptionFilter());
 
   // "ONE_DARK" es el que deje por defecto para la imagen oscura
   const choosedTheme: SwaggerThemeNameEnum = SwaggerThemeNameEnum.ONE_DARK;

@@ -53,28 +53,8 @@ export class AdvisoriesController {
   @ApiCreatedResponse({ description: 'Asesoría creada exitosamente' })
   @ApiBadRequestResponse({ description: 'Datos inválidos o incompletos' })
   create(@Body() dto: CreateAdvisoryDto) {
-    try {
-      console.log('Crear asesoría con datos:', dto);
-      return this.advisoriesService.create(dto);
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        return {
-          statusCode: 404,
-          message: error.message,
-          error: 'Not Found',
-        };
-      }
-      if (error instanceof Error) {
-        // Log the error for debugging purposes
-        console.error('Error al crear la asesoría:', error.message);
-      }
-      return {
-        statusCode: 400,
-        message:
-          error instanceof Error ? error.message : 'Error al crear la asesoría',
-        error: 'Bad Request',
-      };
-    }
+    console.log('Crear asesoría con datos:', dto);
+    return this.advisoriesService.create(dto);
   }
 
   @Get()
@@ -149,29 +129,7 @@ export class AdvisoriesController {
   async findByProfessor(
     @Param('professorId', ParseIntPipe) professorId: number,
   ) {
-    try {
-      return await this.advisoriesService.findByProfessor(professorId);
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        return {
-          statusCode: 404,
-          message: error.message,
-          error: 'Not Found',
-        };
-      }
-      // Log other unexpected errors
-      if (error instanceof Error) {
-        console.error(
-          'Error al obtener asesorías del profesor:',
-          error.message,
-        );
-      }
-      return {
-        statusCode: 500,
-        message: 'Error interno del servidor al obtener las asesorías',
-        error: 'Internal Server Error',
-      };
-    }
+    return await this.advisoriesService.findByProfessor(professorId);
   }
 
   @Get('professor/:professorId/with-sessions')
@@ -197,33 +155,11 @@ export class AdvisoriesController {
     @Param('professorId', ParseIntPipe) professorId: number,
     @Query('include_past') includePast?: string,
   ) {
-    try {
-      const includePastBool = includePast === 'false' ? false : true;
-      return await this.advisoriesService.findByProfessorWithSessions(
-        professorId,
-        includePastBool,
-      );
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        return {
-          statusCode: 404,
-          message: error.message,
-          error: 'Not Found',
-        };
-      }
-      if (error instanceof Error) {
-        console.error(
-          'Error al obtener asesorías con sesiones del profesor:',
-          error.message,
-        );
-      }
-      return {
-        statusCode: 500,
-        message:
-          'Error interno del servidor al obtener las asesorías con sesiones',
-        error: 'Internal Server Error',
-      };
-    }
+    const includePastBool = includePast === 'false' ? false : true;
+    return await this.advisoriesService.findByProfessorWithSessions(
+      professorId,
+      includePastBool,
+    );
   }
 
   @Get(':id')
@@ -232,27 +168,7 @@ export class AdvisoriesController {
   @ApiOkResponse({ description: 'Asesoría encontrada' })
   @ApiNotFoundResponse({ description: 'Asesoría no encontrada' })
   findOne(@Param('id', ParseIntPipe) id: number) {
-    try {
-      return this.advisoriesService.findOne(id);
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        return {
-          statusCode: 404,
-          message: error.message,
-          error: 'Not Found',
-        };
-      }
-      // Log other unexpected errors
-      if (error instanceof Error) {
-        // Log the error for debugging purposes
-        console.error('Error al obtener la asesoría:', error.message);
-      }
-      return {
-        statusCode: 500,
-        message: 'Error interno del servidor al obtener la asesoría',
-        error: 'Internal Server Error',
-      };
-    }
+    return this.advisoriesService.findOne(id);
   }
 
   @Patch(':id')
@@ -264,27 +180,7 @@ export class AdvisoriesController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateAdvisoryDto,
   ) {
-    try {
-      return this.advisoriesService.update(id, dto);
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        return {
-          statusCode: 404,
-          message: error.message,
-          error: 'Not Found',
-        };
-      }
-      // Log other unexpected errors
-      if (error instanceof Error) {
-        // Log the error for debugging purposes
-        console.error('Error al actualizar la asesoría:', error.message);
-      }
-      return {
-        statusCode: 500,
-        message: 'Error interno del servidor al actualizar la asesoría',
-        error: 'Internal Server Error',
-      };
-    }
+    return this.advisoriesService.update(id, dto);
   }
 
   @Delete(':id')
@@ -293,27 +189,7 @@ export class AdvisoriesController {
   @ApiOkResponse({ description: 'Asesoría eliminada exitosamente' })
   @ApiNotFoundResponse({ description: 'Asesoría no encontrada' })
   remove(@Param('id', ParseIntPipe) id: number) {
-    try {
-      return this.advisoriesService.remove(id);
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        return {
-          statusCode: 404,
-          message: error.message,
-          error: 'Not Found',
-        };
-      }
-      // Log other unexpected errors
-      if (error instanceof Error) {
-        // Log the error for debugging purposes
-        console.error('Error al eliminar la asesoría:', error.message);
-      }
-      return {
-        statusCode: 500,
-        message: 'Error interno del servidor al eliminar la asesoría',
-        error: 'Internal Server Error',
-      };
-    }
+    return this.advisoriesService.remove(id);
   }
 
   @Post('direct-session')
@@ -343,34 +219,14 @@ export class AdvisoriesController {
     @Request() req: RequestWithUser,
     @Body() dto: CreateDirectSessionDto,
   ) {
-    try {
-      const professorId = req.user.user_id; // Obtenido del JWT
-      console.log(
-        'Crear sesión directa por profesor:',
-        professorId,
-        'con datos:',
-        dto,
-      );
-
-      return await this.advisoriesService.createDirectSession(professorId, dto);
-    } catch (error) {
-      console.error('Error al crear sesión directa:', error);
-
-      if (error instanceof NotFoundException) {
-        return {
-          statusCode: 404,
-          message: error.message,
-          error: 'Not Found',
-        };
-      }
-
-      return {
-        statusCode: 400,
-        message:
-          error instanceof Error ? error.message : 'Error al crear la sesión',
-        error: 'Bad Request',
-      };
-    }
+    const professorId = req.user.user_id; // Obtenido del JWT
+    console.log(
+      'Crear sesión directa por profesor:',
+      professorId,
+      'con datos:',
+      dto,
+    );
+    return await this.advisoriesService.createDirectSession(professorId, dto);
   }
 
   @Post('sessions/:sessionId/invite')
@@ -390,17 +246,12 @@ export class AdvisoriesController {
     @Body() dto: InviteStudentsDto,
     @Request() req: RequestWithUser,
   ) {
-    try {
-      const professorId = req.user.user_id;
-      return await this.invitationService.inviteStudentsToSession(
-        sessionId,
-        dto,
-        professorId,
-      );
-    } catch (error) {
-      console.error('Error al invitar estudiantes:', error);
-      throw error;
-    }
+    const professorId = req.user.user_id;
+    return await this.invitationService.inviteStudentsToSession(
+      sessionId,
+      dto,
+      professorId,
+    );
   }
 
   @Get('sessions/:sessionId/invitations')
@@ -414,21 +265,16 @@ export class AdvisoriesController {
     @Param('sessionId', ParseIntPipe) sessionId: number,
     @Request() req: RequestWithUser,
   ) {
-    try {
-      const userId = req.user.user_id;
-      const userRole = req.user.role;
+    const userId = req.user.user_id;
+    const userRole = req.user.role;
 
-      // Solo profesores necesitan validación de autorización
-      const professorId = userRole === UserRole.PROFESSOR ? userId : undefined;
+    // Solo profesores necesitan validación de autorización
+    const professorId = userRole === UserRole.PROFESSOR ? userId : undefined;
 
-      return await this.invitationService.getSessionInvitations(
-        sessionId,
-        professorId,
-      );
-    } catch (error) {
-      console.error('Error al obtener invitaciones:', error);
-      throw error;
-    }
+    return await this.invitationService.getSessionInvitations(
+      sessionId,
+      professorId,
+    );
   }
 
   @Get('sessions/:sessionId/students')
@@ -444,12 +290,7 @@ export class AdvisoriesController {
   })
   @ApiNotFoundResponse({ description: 'Session not found' })
   async getSessionStudents(@Param('sessionId', ParseIntPipe) sessionId: number) {
-    try {
-      return await this.advisoriesService.getSessionStudents(sessionId);
-    } catch (error) {
-      console.error('Error al obtener estudiantes de la sesión:', error);
-      throw error;
-    }
+    return await this.advisoriesService.getSessionStudents(sessionId);
   }
 
   @Get('sessions/:sessionId')
