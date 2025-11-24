@@ -21,6 +21,7 @@ import { SessionStudentsResponseDto } from './dto/session-students.dto';
 import { FullSessionDetailsDto } from './dto/full-session-details.dto';
 import { AdvisoryWithSessionsDto } from './dto/advisory-with-sessions.dto';
 import { ProfessorStatsDto } from './dto/professor-stats.dto';
+import { PaginatedResponseDto } from '../common/paginated-response.dto';
 import { OwnershipGuard } from '../auth/ownership.guard';
 import { InvitationService } from './services/invitation.service';
 import {
@@ -97,7 +98,7 @@ export class AdvisoriesController {
     summary:
       'Buscar y ordenar asesorías/sesiones por texto, materia, profesor, fecha, estudiantes',
   })
-  @ApiOkResponse({ description: 'Resultados de búsqueda y ordenamiento' })
+  @ApiOkResponse({ description: 'Resultados de búsqueda y ordenamiento', type: PaginatedResponseDto })
   async searchAdvisories(
     @Query()
     query: import('./dto/search-advisories-query.dto').SearchAdvisoriesQueryDto,

@@ -9,7 +9,7 @@ import {
   FindAdvisoryDatesQueryDto,
   SessionStatus,
 } from './dto/find-advisory-dates-query.dto';
-import { PaginatedAdvisoryDatesResponseDto } from './dto/paginated-response.dto';
+import { PaginatedResponseDto } from '../common/paginated-response.dto';
 import { Repository, FindOptionsWhere, MoreThanOrEqual, LessThanOrEqual, IsNull, Not } from 'typeorm';
 import { AdvisoryDate } from './entities/advisory-date.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -61,7 +61,7 @@ export class AdvisoryDatesService {
 
   async findAll(
     queryDto?: FindAdvisoryDatesQueryDto,
-  ): Promise<PaginatedAdvisoryDatesResponseDto<AdvisoryDate>> {
+  ): Promise<PaginatedResponseDto<AdvisoryDate>> {
     // Si no hay queryDto, usar valores por defecto
     const {
       advisory_id,

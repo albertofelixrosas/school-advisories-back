@@ -128,6 +128,8 @@ export class AdvisoriesService {
    * Búsqueda y ordenamiento de asesorías
    */
   async searchAdvisories(query: any) {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 50;
     const qb = this.advisoryRepo
       .createQueryBuilder('advisory')
       .leftJoinAndSelect('advisory.professor', 'professor')
@@ -165,7 +167,25 @@ export class AdvisoriesService {
       qb.orderBy(sortField, query.order || 'ASC');
     }
 
-    return qb.getMany();
+    // Obtener total antes de paginar
+    const total = await qb.getCount();
+    const total_pages = Math.ceil(total / limit);
+    const has_next = page < total_pages;
+    const has_prev = page > 1;
+    qb.skip((page - 1) * limit).take(limit);
+    const data = await qb.getMany();
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        total_pages,
+        has_next,
+        has_prev,
+      },
+    };
   }
   /**
    * Calcula estadísticas agregadas para un profesor

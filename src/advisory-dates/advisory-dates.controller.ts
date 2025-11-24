@@ -13,6 +13,7 @@ import { AdvisoryDatesService } from './advisory-dates.service';
 import { CreateAdvisoryDateDto } from './dto/create-advisory-date.dto';
 import { UpdateAdvisoryDateDto } from './dto/update-advisory-date.dto';
 import { FindAdvisoryDatesQueryDto } from './dto/find-advisory-dates-query.dto';
+import { PaginatedResponseDto } from '../common/paginated-response.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -39,6 +40,7 @@ export class AdvisoryDatesController {
   })
   @ApiOkResponse({
     description: 'Sesiones obtenidas exitosamente con metadatos de paginación',
+    type: PaginatedResponseDto,
   })
   @ApiQuery({ name: 'advisory_id', required: false, type: Number })
   @ApiQuery({ name: 'professor_id', required: false, type: Number })
