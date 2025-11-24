@@ -36,7 +36,7 @@ export class UserInfoDto {
   employee_id?: string;
 }
 
-export class ProfessorStatsDto {
+export class AuthProfessorStatsDto {
   @ApiProperty({ example: 5 })
   active_advisories_count: number;
 
@@ -195,8 +195,8 @@ export class StudentAppointmentDto {
 }
 
 export class DashboardDataDto {
-  @ApiProperty({ type: ProfessorStatsDto, required: false })
-  professor_stats?: ProfessorStatsDto;
+  @ApiProperty({ type: AuthProfessorStatsDto, required: false })
+  professor_stats?: AuthProfessorStatsDto;
 
   @ApiProperty({ type: StudentStatsDto, required: false })
   student_stats?: StudentStatsDto;

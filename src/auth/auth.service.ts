@@ -12,7 +12,6 @@ import {
   LoginResponseDto,
   UserInfoDto,
   DashboardDataDto,
-  ProfessorStatsDto,
   StudentStatsDto,
   // AdminStatsDto,
   SubjectDetailDto,
@@ -21,6 +20,7 @@ import {
   AvailableAdvisoryDto,
   StudentAppointmentDto,
 } from './dto/login-response.dto';
+import { AuthProfessorStatsDto } from './dto/login-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -262,7 +262,7 @@ export class AuthService {
   private getProfessorStats(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     userId: number,
-  ): Promise<ProfessorStatsDto> {
+  ): Promise<AuthProfessorStatsDto> {
     // Por ahora retornamos datos simulados, se implementarán las queries reales
     return Promise.resolve({
       active_advisories_count: 0,
