@@ -20,7 +20,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: UserPayload): UserPayload {
-    return payload; // disponible en req.user
+  validate(payload: any): UserPayload {
+    // El payload del JWT contiene 'sub' que es el user_id
+    // Lo mapeamos al formato UserPayload esperado
+    return {
+      user_id: payload.sub,
+      username: payload.username,
+      role: payload.role,
+    };
   }
 }

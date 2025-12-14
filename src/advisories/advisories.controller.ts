@@ -261,6 +261,86 @@ export class AdvisoriesController {
     );
   }
 
+  @Get('professor/:professorId/with-sessions')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
+  @ApiOperation({
+    summary: 'Obtener asesorías del profesor CON sesiones incluidas',
+    description:
+      'Devuelve advisories con advisory_dates (sesiones) para la página de gestión de sesiones. ' +
+      'Incluye venue, asistencias y estadísticas de cada sesión.',
+  })
+  @ApiOkResponse({
+    description: 'Asesorías con sesiones obtenidas exitosamente',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          advisory_id: { type: 'number' },
+          max_students: { type: 'number' },
+          professor: { type: 'object' },
+          subject_detail: { type: 'object' },
+          schedules: { type: 'array' },
+          advisory_dates: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                advisory_date_id: { type: 'number' },
+                topic: { type: 'string' },
+                date: { type: 'string' },
+                notes: { type: 'string' },
+                session_link: { type: 'string' },
+                completed_at: { type: 'string' },
+                venue: {
+                  type: 'object',
+                  properties: {
+                    venue_id: { type: 'number' },
+                    name: { type: 'string' },
+                    building: { type: 'string' },
+                    floor: { type: 'string' },
+                    type: { type: 'string' },
+                  },
+                },
+                attendances_count: { type: 'number' },
+                attended_count: { type: 'number' },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiNotFoundResponse({ description: 'Profesor no encontrado' })
+  async findByProfessorWithSessions(
+    @Param('professorId', ParseIntPipe) professorId: number,
+  ) {
+    try {
+      return await this.advisoriesService.findByProfessorWithSessions(
+        professorId,
+      );
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return {
+          statusCode: 404,
+          message: error.message,
+          error: 'Not Found',
+        };
+      }
+      if (error instanceof Error) {
+        console.error(
+          'Error al obtener asesorías con sesiones:',
+          error.message,
+        );
+      }
+      return {
+        statusCode: 500,
+        message: 'Error interno del servidor al obtener las asesorías',
+        error: 'Internal Server Error',
+      };
+    }
+  }
+
   @Get(':id')
   @Roles(UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT)
   @ApiOperation({ summary: 'Obtener asesoría por ID' })
