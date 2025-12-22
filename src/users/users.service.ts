@@ -277,7 +277,14 @@ export class UsersService {
     endOfWeek.setDate(startOfWeek.getDate() + 7);
 
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    const endOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+    );
 
     // User Stats
     const totalUsers = await this.usersRepo.count();
@@ -327,13 +334,15 @@ export class UsersService {
 
     const avgStudentsPerSession =
       attendanceBySession.length > 0
-        ? attendanceBySession.reduce((sum, s) => sum + parseInt(s.student_count, 10), 0) /
-          attendanceBySession.length
+        ? attendanceBySession.reduce(
+            (sum, s) => sum + parseInt(s.student_count, 10),
+            0,
+          ) / attendanceBySession.length
         : 0;
 
     // Session Stats (Advisory Dates)
     const totalSessions = await this.advisoryDateRepo.count();
-    
+
     const upcomingSessions = await this.advisoryDateRepo
       .createQueryBuilder('date')
       .where('date.date >= :now', { now: now.toISOString() })
@@ -347,14 +356,22 @@ export class UsersService {
 
     const thisWeekSessions = await this.advisoryDateRepo
       .createQueryBuilder('date')
-      .where('date.date >= :startOfWeek', { startOfWeek: startOfWeek.toISOString() })
-      .andWhere('date.date < :endOfWeek', { endOfWeek: endOfWeek.toISOString() })
+      .where('date.date >= :startOfWeek', {
+        startOfWeek: startOfWeek.toISOString(),
+      })
+      .andWhere('date.date < :endOfWeek', {
+        endOfWeek: endOfWeek.toISOString(),
+      })
       .getCount();
 
     const thisMonthSessions = await this.advisoryDateRepo
       .createQueryBuilder('date')
-      .where('date.date >= :startOfMonth', { startOfMonth: startOfMonth.toISOString() })
-      .andWhere('date.date <= :endOfMonth', { endOfMonth: endOfMonth.toISOString() })
+      .where('date.date >= :startOfMonth', {
+        startOfMonth: startOfMonth.toISOString(),
+      })
+      .andWhere('date.date <= :endOfMonth', {
+        endOfMonth: endOfMonth.toISOString(),
+      })
       .getCount();
 
     // Request Stats
@@ -384,7 +401,8 @@ export class UsersService {
         const processed = new Date(req.processed_at).getTime();
         return sum + (processed - created);
       }, 0);
-      avgResponseTimeHours = totalResponseTime / processedRequests.length / (1000 * 60 * 60);
+      avgResponseTimeHours =
+        totalResponseTime / processedRequests.length / (1000 * 60 * 60);
     }
 
     // Attendance Stats
@@ -510,7 +528,14 @@ export class UsersService {
   ): Promise<ProfessorDashboardStatsDto> {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    const endOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+    );
 
     // Verify professor exists
     const professor = await this.usersRepo.findOne({
@@ -537,7 +562,9 @@ export class UsersService {
 
     // Count active advisories (have future dates)
     const activeAdvisories = professorAdvisories.filter((advisory) => {
-      return advisory.advisory_dates?.some((date) => new Date(date.date) >= now);
+      return advisory.advisory_dates?.some(
+        (date) => new Date(date.date) >= now,
+      );
     });
 
     // Count upcoming sessions
@@ -565,8 +592,12 @@ export class UsersService {
       .innerJoin('date.advisory', 'advisory')
       .innerJoin('advisory.subject_detail', 'sd')
       .where('sd.professor_id = :professorId', { professorId })
-      .andWhere('date.date >= :startOfMonth', { startOfMonth: startOfMonth.toISOString() })
-      .andWhere('date.date <= :endOfMonth', { endOfMonth: endOfMonth.toISOString() })
+      .andWhere('date.date >= :startOfMonth', {
+        startOfMonth: startOfMonth.toISOString(),
+      })
+      .andWhere('date.date <= :endOfMonth', {
+        endOfMonth: endOfMonth.toISOString(),
+      })
       .andWhere('attendance.attended = :attended', { attended: true })
       .select('COUNT(DISTINCT attendance.student_id)', 'count')
       .getRawOne();
@@ -612,18 +643,18 @@ export class UsersService {
           completed_sessions: 0,
         });
       }
-      
+
       const advisory = advisoriesMap.get(advisoryId);
       const sessionDate = row.dates_date ? new Date(row.dates_date) : null;
-      
+
       if (row.dates_completed_at) {
         advisory.completed_sessions++;
       }
-      
+
       if (sessionDate && sessionDate >= now && !advisory.next_session_date) {
         advisory.next_session_date = row.dates_date;
       }
-      
+
       advisory.enrolled_students = Math.max(
         advisory.enrolled_students,
         parseInt(row.enrolled_count || '0', 10),
@@ -690,10 +721,7 @@ export class UsersService {
         total_hours_this_semester: totalHoursThisSemester,
         average_rating: 0, // TODO: Implement rating system
         completion_rate: Math.round(completionRate * 100) / 100,
-        total_students_helped: parseInt(
-          totalStudentsHelped?.count || '0',
-          10,
-        ),
+        total_students_helped: parseInt(totalStudentsHelped?.count || '0', 10),
       },
     };
   }
@@ -701,218 +729,249 @@ export class UsersService {
   async getStudentDashboardStats(
     studentId: number,
   ): Promise<StudentDashboardStatsDto> {
-    const now = new Date();
+    try {
+      const now = new Date();
 
-    // Verify student exists
-    const student = await this.usersRepo.findOne({
-      where: { user_id: studentId, role: UserRole.STUDENT },
-    });
+      // Verify student exists
+      const student = await this.usersRepo.findOne({
+        where: { user_id: studentId, role: UserRole.STUDENT },
+      });
 
-    if (!student) {
-      throw new NotFoundException('Estudiante no encontrado');
-    }
-
-    // Get student's attendance records
-    const attendanceRecords = await this.attendanceRepo.find({
-      where: { student_id: studentId },
-      relations: [
-        'advisory_date',
-        'advisory_date.advisory',
-        'advisory_date.advisory.subject_detail',
-        'advisory_date.advisory.subject_detail.subject',
-        'advisory_date.advisory.subject_detail.professor',
-        'advisory_date.advisory.venue',
-      ],
-    });
-
-    // Get active advisories (have future dates and student attended at least once)
-    const activeAdvisoriesSet = new Set<number>();
-    const completedAdvisoriesSet = new Set<number>();
-    
-    attendanceRecords.forEach((attendance) => {
-      const advisoryDate = attendance.advisory_date;
-      if (!advisoryDate || !advisoryDate.advisory) return;
-
-      const sessionDate = new Date(advisoryDate.date);
-      const advisoryId = advisoryDate.advisory.advisory_id;
-
-      if (sessionDate >= now) {
-        activeAdvisoriesSet.add(advisoryId);
-      } else if (advisoryDate.completed_at) {
-        completedAdvisoriesSet.add(advisoryId);
-      }
-    });
-
-    // Get pending requests
-    const pendingRequests = await this.advisoryRequestRepo.count({
-      where: {
-        student_id: studentId,
-        status: RequestStatus.PENDING,
-      },
-    });
-
-    // Find next advisory
-    const nextAdvisoryAttendance = attendanceRecords
-      .filter((a) => a.advisory_date && new Date(a.advisory_date.date) >= now)
-      .sort(
-        (a, b) =>
-          new Date(a.advisory_date!.date).getTime() -
-          new Date(b.advisory_date!.date).getTime(),
-      )[0];
-
-    let nextAdvisory: {
-      advisory_id: number;
-      title: string;
-      subject_name: string;
-      professor_name: string;
-      next_session_date: string;
-      venue: string;
-    } | null = null;
-
-    if (nextAdvisoryAttendance?.advisory_date) {
-      const advDate = nextAdvisoryAttendance.advisory_date;
-      const adv = advDate.advisory;
-      const prof = adv?.subject_detail?.professor;
-      nextAdvisory = {
-        advisory_id: adv?.advisory_id || 0,
-        title: advDate.topic,
-        subject_name: adv?.subject_detail?.subject?.subject || 'N/A',
-        professor_name: prof
-          ? `${prof.name} ${prof.last_name}`
-          : 'N/A',
-        next_session_date: advDate.date,
-        venue: advDate.venue?.name || 'N/A',
-      };
-    }
-
-    // Get recent advisories with attendance stats
-    const advisoryStatsMap = new Map();
-    
-    attendanceRecords.forEach((attendance) => {
-      const advisoryDate = attendance.advisory_date;
-      if (!advisoryDate || !advisoryDate.advisory) return;
-
-      const advisory = advisoryDate.advisory;
-      const advisoryId = advisory.advisory_id;
-      const sessionDate = new Date(advisoryDate.date);
-
-      if (!advisoryStatsMap.has(advisoryId)) {
-        const prof = advisory.subject_detail?.professor;
-        advisoryStatsMap.set(advisoryId, {
-          advisory_id: advisoryId,
-          title: advisoryDate.topic || `Advisory ${advisoryId}`,
-          subject_name: advisory.subject_detail?.subject?.subject || 'N/A',
-          professor_name: prof ? `${prof.name} ${prof.last_name}` : 'N/A',
-          last_attended_date: null,
-          sessions_attended: 0,
-          total_sessions: 0,
-          attendance_percentage: 0,
-        });
+      if (!student) {
+        throw new NotFoundException('Estudiante no encontrado');
       }
 
-      const stats = advisoryStatsMap.get(advisoryId);
-      stats.total_sessions++;
+      // Get student's attendance records
+      const attendanceRecords = await this.attendanceRepo.find({
+        where: { student_id: studentId },
+        relations: [
+          'advisory_date',
+          'advisory_date.advisory',
+          'advisory_date.advisory.subject_detail',
+          'advisory_date.advisory.subject_detail.subject',
+          'advisory_date.advisory.subject_detail.professor',
+          'advisory_date.venue',
+        ],
+      });
 
-      if (attendance.attended) {
-        stats.sessions_attended++;
-        if (
-          !stats.last_attended_date ||
-          sessionDate > new Date(stats.last_attended_date)
-        ) {
-          stats.last_attended_date = advisoryDate.date;
+      // Get active advisories (have future dates and student attended at least once)
+      const activeAdvisoriesSet = new Set<number>();
+      const completedAdvisoriesSet = new Set<number>();
+
+      attendanceRecords.forEach((attendance) => {
+        const advisoryDate = attendance.advisory_date;
+        if (!advisoryDate || !advisoryDate.advisory) return;
+
+        const sessionDate = new Date(advisoryDate.date);
+        const advisoryId = advisoryDate.advisory.advisory_id;
+
+        if (sessionDate >= now) {
+          activeAdvisoriesSet.add(advisoryId);
+        } else if (advisoryDate.completed_at) {
+          completedAdvisoriesSet.add(advisoryId);
         }
+      });
+
+      // Get pending requests
+      const pendingRequests = await this.advisoryRequestRepo.count({
+        where: {
+          student_id: studentId,
+          status: RequestStatus.PENDING,
+        },
+      });
+
+      // Find next advisory
+      const nextAdvisoryAttendance = attendanceRecords
+        .filter((a) => a.advisory_date && new Date(a.advisory_date.date) >= now)
+        .sort(
+          (a, b) =>
+            new Date(a.advisory_date.date).getTime() -
+            new Date(b.advisory_date.date).getTime(),
+        )[0];
+
+      let nextAdvisory: {
+        advisory_id: number;
+        title: string;
+        subject_name: string;
+        professor_name: string;
+        next_session_date: string;
+        venue: string;
+      } | null = null;
+
+      if (nextAdvisoryAttendance?.advisory_date) {
+        const advDate = nextAdvisoryAttendance.advisory_date;
+        const adv = advDate.advisory;
+        const prof = adv?.subject_detail?.professor;
+        nextAdvisory = {
+          advisory_id: adv?.advisory_id || 0,
+          title: advDate.topic,
+          subject_name: adv?.subject_detail?.subject?.subject || 'N/A',
+          professor_name: prof ? `${prof.name} ${prof.last_name}` : 'N/A',
+          next_session_date: advDate.date,
+          venue: advDate.venue?.name || 'N/A',
+        };
       }
 
-      stats.attendance_percentage =
-        stats.total_sessions > 0
-          ? (stats.sessions_attended / stats.total_sessions) * 100
+      // Get recent advisories with attendance stats
+      const advisoryStatsMap = new Map();
+
+      attendanceRecords.forEach((attendance) => {
+        const advisoryDate = attendance.advisory_date;
+        if (!advisoryDate || !advisoryDate.advisory) return;
+
+        const advisory = advisoryDate.advisory;
+        const advisoryId = advisory.advisory_id;
+        const sessionDate = new Date(advisoryDate.date);
+
+        if (!advisoryStatsMap.has(advisoryId)) {
+          const prof = advisory.subject_detail?.professor;
+          advisoryStatsMap.set(advisoryId, {
+            advisory_id: advisoryId,
+            title: advisoryDate.topic || `Advisory ${advisoryId}`,
+            subject_name: advisory.subject_detail?.subject?.subject || 'N/A',
+            professor_name: prof ? `${prof.name} ${prof.last_name}` : 'N/A',
+            last_attended_date: null,
+            sessions_attended: 0,
+            total_sessions: 0,
+            attendance_percentage: 0,
+          });
+        }
+
+        const stats = advisoryStatsMap.get(advisoryId);
+        stats.total_sessions++;
+
+        if (attendance.attended) {
+          stats.sessions_attended++;
+          if (
+            !stats.last_attended_date ||
+            sessionDate > new Date(stats.last_attended_date)
+          ) {
+            stats.last_attended_date = advisoryDate.date;
+          }
+        }
+
+        stats.attendance_percentage =
+          stats.total_sessions > 0
+            ? (stats.sessions_attended / stats.total_sessions) * 100
+            : 0;
+      });
+
+      const recentAdvisories = Array.from(advisoryStatsMap.values())
+        .sort((a, b) => {
+          const dateA = a.last_attended_date
+            ? new Date(a.last_attended_date).getTime()
+            : 0;
+          const dateB = b.last_attended_date
+            ? new Date(b.last_attended_date).getTime()
+            : 0;
+          return dateB - dateA;
+        })
+        .slice(0, 5);
+
+      // Get available professors with their subjects
+      const availableProfessors = await this.subjectDetailsRepo
+        .createQueryBuilder('sd')
+        .innerJoinAndSelect('sd.professor', 'professor')
+        .innerJoinAndSelect('sd.subject', 'subject')
+        .leftJoin('sd.advisories', 'advisory')
+        .leftJoin('advisory.advisory_dates', 'dates')
+        .where('dates.date >= :now OR dates.date IS NULL', {
+          now: now.toISOString(),
+        })
+        .andWhere('sd.is_active = :isActive', { isActive: true })
+        .select([
+          'professor.user_id',
+          'professor.name',
+          'professor.last_name',
+          'professor.photo_url',
+          'subject.subject',
+        ])
+        .addSelect(
+          'COUNT(DISTINCT CASE WHEN dates.date >= :now THEN advisory.advisory_id END)',
+          'advisory_count',
+        )
+        .groupBy('professor.user_id')
+        .addGroupBy('professor.name')
+        .addGroupBy('professor.last_name')
+        .addGroupBy('professor.photo_url')
+        .addGroupBy('subject.subject')
+        .orderBy('advisory_count', 'DESC')
+        .limit(10)
+        .getRawMany();
+
+      const availableProfessorsFormatted = availableProfessors.map((p) => ({
+        user_id: p.professor_user_id,
+        name: p.professor_name,
+        last_name: p.professor_last_name,
+        photo_url: p.professor_photo_url,
+        subject: p.subject_subject,
+        available_advisories: parseInt(p.advisory_count || '0', 10),
+      }));
+
+      // Calculate statistics
+      const totalAdvisoriesAttended = attendanceRecords.filter(
+        (a) => a.attended,
+      ).length;
+
+      const subjectsCovered = Array.from(
+        new Set(
+          attendanceRecords
+            .filter(
+              (a) =>
+                a.attended &&
+                a.advisory_date?.advisory?.subject_detail?.subject,
+            )
+            .map(
+              (a) =>
+                a.advisory_date?.advisory?.subject_detail?.subject?.subject,
+            )
+            .filter((subject): subject is string => subject !== undefined),
+        ),
+      );
+
+      const totalHoursReceived = totalAdvisoriesAttended * 2; // Assuming 2 hours per session
+
+      const totalAttendanceRecords = attendanceRecords.length;
+      const attendedRecords = attendanceRecords.filter(
+        (a) => a.attended,
+      ).length;
+      const averageAttendanceRate =
+        totalAttendanceRecords > 0
+          ? (attendedRecords / totalAttendanceRecords) * 100
           : 0;
-    });
 
-    const recentAdvisories = Array.from(advisoryStatsMap.values())
-      .sort((a, b) => {
-        const dateA = a.last_attended_date
-          ? new Date(a.last_attended_date).getTime()
-          : 0;
-        const dateB = b.last_attended_date
-          ? new Date(b.last_attended_date).getTime()
-          : 0;
-        return dateB - dateA;
-      })
-      .slice(0, 5);
+      return {
+        overview: {
+          active_advisories: activeAdvisoriesSet.size,
+          completed_advisories: completedAdvisoriesSet.size,
+          pending_requests: pendingRequests,
+          next_advisory: nextAdvisory,
+        },
+        recent_activity: {
+          recent_advisories: recentAdvisories,
+          available_professors: availableProfessorsFormatted,
+        },
+        statistics: {
+          total_advisories_attended: totalAdvisoriesAttended,
+          subjects_covered: subjectsCovered,
+          total_hours_received: totalHoursReceived,
+          average_attendance_rate:
+            Math.round(averageAttendanceRate * 100) / 100,
+        },
+      };
+    } catch (error) {
+      // Log the error for debugging
+      console.error('Error getting student dashboard stats:', error);
 
-    // Get available professors with their subjects
-    const availableProfessors = await this.subjectDetailsRepo
-      .createQueryBuilder('sd')
-      .innerJoinAndSelect('sd.professor', 'professor')
-      .innerJoinAndSelect('sd.subject', 'subject')
-      .leftJoin('sd.advisories', 'advisory')
-      .leftJoin('advisory.advisory_dates', 'dates')
-      .where('dates.date >= :now', { now: now.toISOString() })
-      .select([
-        'professor.user_id',
-        'professor.name',
-        'professor.last_name',
-        'professor.photo_url',
-        'subject.subject',
-      ])
-      .addSelect('COUNT(DISTINCT advisory.advisory_id)', 'advisory_count')
-      .groupBy('professor.user_id')
-      .addGroupBy('professor.name')
-      .addGroupBy('professor.last_name')
-      .addGroupBy('professor.photo_url')
-      .addGroupBy('subject.subject')
-      .limit(10)
-      .getRawMany();
+      // If it's a NotFoundException, rethrow it
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
 
-    const availableProfessorsFormatted = availableProfessors.map((p) => ({
-      user_id: p.professor_user_id,
-      name: p.professor_name,
-      last_name: p.professor_last_name,
-      photo_url: p.professor_photo_url,
-      subject: p.subject_subject,
-      available_advisories: parseInt(p.advisory_count || '0', 10),
-    }));
-
-    // Calculate statistics
-    const totalAdvisoriesAttended = attendanceRecords.filter(
-      (a) => a.attended,
-    ).length;
-
-    const subjectsCovered = Array.from(
-      new Set(
-        attendanceRecords
-          .filter((a) => a.attended && a.advisory_date?.advisory?.subject_detail?.subject)
-          .map((a) => a.advisory_date!.advisory!.subject_detail!.subject!.subject),
-      ),
-    );
-
-    const totalHoursReceived = totalAdvisoriesAttended * 2; // Assuming 2 hours per session
-
-    const totalAttendanceRecords = attendanceRecords.length;
-    const attendedRecords = attendanceRecords.filter((a) => a.attended).length;
-    const averageAttendanceRate =
-      totalAttendanceRecords > 0
-        ? (attendedRecords / totalAttendanceRecords) * 100
-        : 0;
-
-    return {
-      overview: {
-        active_advisories: activeAdvisoriesSet.size,
-        completed_advisories: completedAdvisoriesSet.size,
-        pending_requests: pendingRequests,
-        next_advisory: nextAdvisory,
-      },
-      recent_activity: {
-        recent_advisories: recentAdvisories,
-        available_professors: availableProfessorsFormatted,
-      },
-      statistics: {
-        total_advisories_attended: totalAdvisoriesAttended,
-        subjects_covered: subjectsCovered,
-        total_hours_received: totalHoursReceived,
-        average_attendance_rate: Math.round(averageAttendanceRate * 100) / 100,
-      },
-    };
+      // For other errors, throw a generic error with details
+      throw new Error(
+        `Error al obtener estadísticas del estudiante: ${error.message}`,
+      );
+    }
   }
 }
