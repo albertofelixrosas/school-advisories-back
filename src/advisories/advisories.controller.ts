@@ -10,7 +10,6 @@ import {
   UseGuards,
   Request,
   Query,
-  NotFoundException,
 } from '@nestjs/common';
 import { RequestWithUser } from '../auth/types/request-with-user';
 import { AdvisoriesService } from './advisories.service';
@@ -99,7 +98,10 @@ export class AdvisoriesController {
     summary:
       'Buscar y ordenar asesorías/sesiones por texto, materia, profesor, fecha, estudiantes',
   })
-  @ApiOkResponse({ description: 'Resultados de búsqueda y ordenamiento', type: PaginatedResponseDto })
+  @ApiOkResponse({
+    description: 'Resultados de búsqueda y ordenamiento',
+    type: PaginatedResponseDto,
+  })
   async searchAdvisories(
     @Query()
     query: import('./dto/search-advisories-query.dto').SearchAdvisoriesQueryDto,
@@ -261,8 +263,6 @@ export class AdvisoriesController {
       includePastBool,
     );
   }
-
-
 
   @Get(':id')
   @Roles(UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT)
