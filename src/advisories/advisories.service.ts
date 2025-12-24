@@ -285,6 +285,63 @@ export class AdvisoriesService {
     const sessions = advisories.flatMap((a) => a.advisory_dates || []);
     return sessions;
   }
+
+  /**
+   * Devuelve las sesiones de un usuario según su rol
+   * - PROFESSOR: sesiones donde es el profesor asignado
+   * - STUDENT: sesiones donde está registrado en la asistencia
+   */
+  async findSessionsByUser(userId: number, userRole: UserRole) {
+    if (userRole === UserRole.PROFESSOR) {
+      // Obtener sesiones donde el usuario es el profesor
+      const sessions = await this.advisoryDateRepo.find({
+        where: {
+          advisory: {
+            professor_id: userId,
+          },
+        },
+        relations: [
+          'advisory',
+          'advisory.professor',
+          'advisory.subject_detail',
+          'advisory.subject_detail.subject',
+          'venue',
+          'attendances',
+          'attendances.student',
+        ],
+        order: {
+          date: 'ASC',
+        },
+      });
+
+      return sessions;
+    } else if (userRole === UserRole.STUDENT) {
+      // Obtener sesiones donde el estudiante está en la asistencia
+      const sessions = await this.advisoryDateRepo.find({
+        where: {
+          attendances: {
+            student_id: userId,
+          },
+        },
+        relations: [
+          'advisory',
+          'advisory.professor',
+          'advisory.subject_detail',
+          'advisory.subject_detail.subject',
+          'venue',
+          'attendances',
+          'attendances.student',
+        ],
+        order: {
+          date: 'ASC',
+        },
+      });
+
+      return sessions;
+    }
+
+    return [];
+  }
   constructor(
     @InjectRepository(Advisory)
     private readonly advisoryRepo: Repository<Advisory>,

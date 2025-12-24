@@ -124,14 +124,18 @@ export class AdvisoriesController {
     return await this.advisoriesService.getProfessorStats(professorId);
   }
   @Get('my-sessions')
-  @Roles(UserRole.PROFESSOR)
   @ApiOperation({
-    summary: 'Obtener sesiones propias del profesor autenticado',
+    summary:
+      'Obtener sesiones propias del usuario autenticado (profesor o estudiante)',
+    description:
+      'Si es profesor, devuelve las sesiones que imparte. Si es estudiante, devuelve las sesiones en las que está registrado.',
   })
   @ApiOkResponse({ description: 'Lista de sesiones propias' })
   mySessions(@Request() req: RequestWithUser) {
-    // El usuario autenticado es profesor, filtrar por su user_id
-    return this.advisoriesService.findSessionsByProfessor(req.user.user_id);
+    return this.advisoriesService.findSessionsByUser(
+      req.user.user_id,
+      req.user.role,
+    );
   }
   @Get('my-advisories')
   @Roles(UserRole.PROFESSOR)
