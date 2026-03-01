@@ -64,7 +64,6 @@ export class SeedService {
       school_id: 1,
       username: 'admin',
       password: hashedPassword,
-      employee_id: 'EMP001',
       role: UserRole.ADMIN,
       is_active: true,
     });
@@ -77,7 +76,6 @@ export class SeedService {
       school_id: 1,
       username: 'mgarcia',
       password: hashedPassword,
-      employee_id: 'EMP002',
       role: UserRole.PROFESSOR,
       is_active: true,
     });
@@ -90,7 +88,6 @@ export class SeedService {
       school_id: 1,
       username: 'alopez',
       password: hashedPassword,
-      student_id: 'EST220001',
       role: UserRole.STUDENT,
       is_active: true,
     });

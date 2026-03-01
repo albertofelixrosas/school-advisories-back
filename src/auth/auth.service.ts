@@ -99,8 +99,6 @@ export class AuthService {
       role: fullUser.role,
       photo_url: fullUser.photo_url,
       school_id: fullUser.school_id,
-      student_id: fullUser.student_id,
-      employee_id: fullUser.employee_id,
     };
 
     // Obtener datos del dashboard según el rol

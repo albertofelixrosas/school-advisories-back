@@ -86,8 +86,6 @@ export class UsersService {
         'username',
         'photo_url',
         'school_id',
-        'student_id',
-        'employee_id',
         'role',
       ],
     });
@@ -165,7 +163,6 @@ export class UsersService {
         name: student.name,
         last_name: student.last_name,
         email: student.email,
-        student_id: student.student_id,
       },
       enrolled_subjects: Array.from(subjectsMap.values()),
     };

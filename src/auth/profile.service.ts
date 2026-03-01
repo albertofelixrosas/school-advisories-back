@@ -80,10 +80,8 @@ export class ProfileService {
     baseInfo: BaseUserInfoDto,
   ): Promise<StudentProfileResponseDto> {
     const studentProfile: StudentProfileDto = {
-      student_id: user.student_id || 'N/A',
       career: 'Ingeniería en Sistemas Computacionales', // TODO: Implementar relación con carrera
       semester: 5, // TODO: Implementar campo semester en User o crear tabla Student
-      student_code: user.student_id || 'N/A',
       enrollment_date: new Date().toISOString(), // TODO: Implementar fecha de inscripción
       academic_status: 'active',
     };
@@ -104,10 +102,8 @@ export class ProfileService {
     baseInfo: BaseUserInfoDto,
   ): Promise<ProfessorProfileResponseDto> {
     const professorProfile: ProfessorProfileDto = {
-      employee_id: user.employee_id || 'N/A',
       department: 'Departamento de Sistemas y Computación', // TODO: Implementar relación
       faculty: 'Facultad de Ingeniería', // TODO: Implementar relación
-      employee_code: user.employee_id || 'N/A',
       hire_date: new Date().toISOString(), // TODO: Implementar fecha de contratación
       academic_degree: 'Maestro en Ciencias', // TODO: Implementar campo
       specialties: ['Programación', 'Algoritmos'], // TODO: Implementar tabla de especialidades
@@ -133,12 +129,10 @@ export class ProfileService {
     baseInfo: BaseUserInfoDto,
   ): Promise<AdminProfileResponseDto> {
     const adminProfile: AdminProfileDto = {
-      employee_id: user.employee_id || 'N/A',
       department: 'Administración Académica',
       position: 'Coordinador de Asesorías',
       access_level: 'full',
       permissions: ['users_management', 'system_config', 'reports'],
-      employee_code: user.employee_id || 'N/A',
     };
 
     const systemInfo = await this.getAdminSystemInfo(user.user_id);

@@ -79,7 +79,6 @@ export class AdvisoryRequestResponseDto {
     name: string;
     last_name: string;
     email: string;
-    student_id: string;
   };
 
   professor?: {
@@ -87,7 +86,6 @@ export class AdvisoryRequestResponseDto {
     name: string;
     last_name: string;
     email: string;
-    employee_id: string;
   };
 
   subject_detail?: {

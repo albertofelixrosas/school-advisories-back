@@ -67,17 +67,11 @@ export class BaseUserInfoDto {
 }
 
 export class StudentProfileDto {
-  @ApiProperty({ example: 'ST2024001' })
-  student_id: string;
-
   @ApiProperty({ example: 'Ingeniería en Sistemas Computacionales' })
   career: string;
 
   @ApiProperty({ example: 5 })
   semester: number;
-
-  @ApiProperty({ example: '2024001' })
-  student_code: string;
 
   @ApiProperty({ example: '2024-08-15T00:00:00.000Z' })
   enrollment_date: string;
@@ -133,17 +127,11 @@ export class StudentProfileResponseDto {
 }
 
 export class ProfessorProfileDto {
-  @ApiProperty({ example: 'PR2024001' })
-  employee_id: string;
-
   @ApiProperty({ example: 'Departamento de Sistemas y Computación' })
   department: string;
 
   @ApiProperty({ example: 'Facultad de Ingeniería' })
   faculty: string;
-
-  @ApiProperty({ example: 'EMP001' })
-  employee_code: string;
 
   @ApiProperty({ example: '2020-02-01T00:00:00.000Z' })
   hire_date: string;
@@ -217,9 +205,6 @@ export class ProfessorProfileResponseDto {
 }
 
 export class AdminProfileDto {
-  @ApiProperty({ example: 'ADM001' })
-  employee_id: string;
-
   @ApiProperty({ example: 'Administración Académica' })
   department: string;
 
@@ -231,9 +216,6 @@ export class AdminProfileDto {
 
   @ApiProperty({ example: ['users_management', 'system_config', 'reports'] })
   permissions: string[];
-
-  @ApiProperty({ example: 'EMP002' })
-  employee_code: string;
 }
 
 export class SystemInfoDto {

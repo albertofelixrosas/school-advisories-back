@@ -4,9 +4,6 @@ export class SessionStudentDto {
   @ApiProperty({ description: 'User ID of the student' })
   user_id: number;
 
-  @ApiProperty({ description: 'Student ID (enrollment number)' })
-  student_id: string;
-
   @ApiProperty({ description: 'Student first name' })
   name: string;
 

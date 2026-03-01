@@ -874,7 +874,6 @@ export class AdvisoriesService {
     // Get all students from attendance records
     const students = session.attendances.map((attendance) => ({
       user_id: attendance.student.user_id,
-      student_id: attendance.student.student_id,
       name: attendance.student.name,
       last_name: attendance.student.last_name,
       email: attendance.student.email,
@@ -955,7 +954,6 @@ export class AdvisoriesService {
 
     const attendances = session.attendances.map((att) => ({
       student_id: att.student.user_id,
-      student_enrollment_id: att.student.student_id,
       student_name: att.student.name,
       student_last_name: att.student.last_name,
       attended: att.attended,

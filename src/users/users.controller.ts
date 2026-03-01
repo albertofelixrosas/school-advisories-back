@@ -152,7 +152,6 @@ export class UsersController {
             name: { type: 'string' },
             last_name: { type: 'string' },
             email: { type: 'string' },
-            student_id: { type: 'string' },
           },
         },
         enrolled_subjects: {

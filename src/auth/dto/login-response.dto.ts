@@ -28,12 +28,6 @@ export class UserInfoDto {
 
   @ApiProperty({ example: 1, required: false })
   school_id?: number;
-
-  @ApiProperty({ example: 'ST2024001', required: false })
-  student_id?: string;
-
-  @ApiProperty({ example: 'PR2024001', required: false })
-  employee_id?: string;
 }
 
 export class AuthProfessorStatsDto {

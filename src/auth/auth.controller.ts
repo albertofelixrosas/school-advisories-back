@@ -62,7 +62,6 @@ export class AuthController {
           role: 'professor',
           photo_url: 'https://example.com/photo.jpg',
           school_id: 1,
-          employee_id: 'PR2024001',
         },
         dashboard_data: {
           professor_stats: {
@@ -177,7 +176,6 @@ export class AuthController {
                   first_name: 'Juan',
                   last_name: 'Pérez',
                   role: 'STUDENT',
-                  student_id: 'STU2024001',
                   created_at: '2024-01-15T10:00:00Z',
                   updated_at: '2024-01-15T10:00:00Z',
                 },
@@ -209,7 +207,6 @@ export class AuthController {
                   first_name: 'María',
                   last_name: 'García',
                   role: 'PROFESSOR',
-                  employee_id: 'EMP2024002',
                   created_at: '2024-01-10T09:00:00Z',
                   updated_at: '2024-01-10T09:00:00Z',
                 },
@@ -240,7 +237,6 @@ export class AuthController {
                   first_name: 'Carlos',
                   last_name: 'Rodríguez',
                   role: 'ADMIN',
-                  employee_id: 'ADM2024001',
                   created_at: '2024-01-01T08:00:00Z',
                   updated_at: '2024-01-01T08:00:00Z',
                 },

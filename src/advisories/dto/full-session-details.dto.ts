@@ -68,9 +68,6 @@ export class SessionAttendanceDto {
   student_id: number;
 
   @ApiProperty()
-  student_enrollment_id: string;
-
-  @ApiProperty()
   student_name: string;
 
   @ApiProperty()
