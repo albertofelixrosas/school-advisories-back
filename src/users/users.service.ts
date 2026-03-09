@@ -1030,4 +1030,134 @@ export class UsersService {
 
     return user;
   }
+
+  /**
+   * Obtiene estadísticas de asesorías filtradas por carrera y/o plan de estudios
+   */
+  async getAdvisoriesReportByCareer(
+    careerId?: number,
+    studyPlanId?: number,
+    startDate?: Date,
+    endDate?: Date,
+  ) {
+    const now = new Date();
+
+    // Base query builder para estudiantes
+    let studentsQuery = this.usersRepo
+      .createQueryBuilder('user')
+      .where('user.role = :role', { role: UserRole.STUDENT });
+
+    if (careerId) {
+      studentsQuery = studentsQuery.andWhere('user.career_id = :careerId', {
+        careerId,
+      });
+    }
+
+    const totalStudents = await studentsQuery.getCount();
+
+    // Obtener estudiantes con asistencias
+    let attendanceQuery = this.attendanceRepo
+      .createQueryBuilder('attendance')
+      .innerJoin('attendance.student', 'student')
+      .innerJoin('attendance.advisory_date', 'date')
+      .innerJoin('date.advisory', 'advisory')
+      .innerJoin('advisory.subject_detail', 'sd')
+      .innerJoin('sd.subject', 'subject')
+      .innerJoin('sd.professor', 'professor');
+
+    // Aplicar filtros
+    if (careerId) {
+      attendanceQuery = attendanceQuery.andWhere(
+        'student.career_id = :careerId',
+        { careerId },
+      );
+    }
+
+    if (startDate) {
+      attendanceQuery = attendanceQuery.andWhere('date.date >= :startDate', {
+        startDate: startDate.toISOString(),
+      });
+    }
+
+    if (endDate) {
+      attendanceQuery = attendanceQuery.andWhere('date.date <= :endDate', {
+        endDate: endDate.toISOString(),
+      });
+    }
+
+    // Estadísticas de asistencia
+    const attendanceStats = await attendanceQuery
+      .select([
+        'COUNT(attendance.attendance_id) as total_attendances',
+        'COUNT(CASE WHEN attendance.attended = true THEN 1 END) as attended_count',
+        'COUNT(DISTINCT student.user_id) as unique_students',
+        'COUNT(DISTINCT subject.subject_id) as unique_subjects',
+      ])
+      .getRawOne();
+
+    // Top materias más solicitadas
+    const topSubjects = await attendanceQuery
+      .select([
+        'subject.subject_id',
+        'subject.subject',
+        'COUNT(DISTINCT date.advisory_date_id) as sessions_count',
+        'COUNT(DISTINCT student.user_id) as students_count',
+      ])
+      .groupBy('subject.subject_id')
+      .addGroupBy('subject.subject')
+      .orderBy('sessions_count', 'DESC')
+      .limit(10)
+      .getRawMany();
+
+    // Asesorías por período
+    const advisoriesByMonth = await attendanceQuery
+      .select([
+        "TO_CHAR(date.date, 'YYYY-MM') as month",
+        'COUNT(DISTINCT date.advisory_date_id) as sessions_count',
+        'COUNT(DISTINCT student.user_id) as students_count',
+      ])
+      .groupBy('month')
+      .orderBy('month', 'DESC')
+      .limit(12)
+      .getRawMany();
+
+    const attendanceRate =
+      parseInt(attendanceStats.total_attendances || '0') > 0
+        ? (parseInt(attendanceStats.attended_count || '0') /
+            parseInt(attendanceStats.total_attendances || '0')) *
+          100
+        : 0;
+
+    return {
+      filters: {
+        career_id: careerId || null,
+        study_plan_id: studyPlanId || null,
+        start_date: startDate || null,
+        end_date: endDate || null,
+      },
+      summary: {
+        total_students: totalStudents,
+        students_with_advisories: parseInt(
+          attendanceStats.unique_students || '0',
+        ),
+        total_attendances: parseInt(attendanceStats.total_attendances || '0'),
+        attended_count: parseInt(attendanceStats.attended_count || '0'),
+        attendance_rate: Math.round(attendanceRate * 100) / 100,
+        unique_subjects_covered: parseInt(
+          attendanceStats.unique_subjects || '0',
+        ),
+      },
+      top_subjects: topSubjects.map((s) => ({
+        subject_id: parseInt(s.subject_id),
+        subject_name: s.subject,
+        sessions_count: parseInt(s.sessions_count),
+        students_count: parseInt(s.students_count),
+      })),
+      advisories_by_month: advisoriesByMonth.map((m) => ({
+        month: m.month,
+        sessions_count: parseInt(m.sessions_count),
+        students_count: parseInt(m.students_count),
+      })),
+    };
+  }
 }

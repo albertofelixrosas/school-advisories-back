@@ -11,6 +11,7 @@ import {
   UseGuards,
   Req,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { RequestWithUser } from '../auth/types/request-with-user';
@@ -138,6 +139,32 @@ export class UsersController {
   })
   async getStudentDashboardStats(@Req() req: RequestWithUser) {
     return this.usersService.getStudentDashboardStats(req.user.user_id);
+  }
+
+  @Get('reports/advisories-by-career')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth('jwt-auth')
+  @ApiOperation({
+    summary: 'Get advisories report filtered by career (Admin only)',
+    description:
+      'Returns detailed advisory statistics filtered by career and/or study plan, with optional date range filters',
+  })
+  @ApiOkResponse({
+    description: 'Advisory report retrieved successfully',
+  })
+  async getAdvisoriesReportByCareer(
+    @Query('careerId') careerId?: string,
+    @Query('studyPlanId') studyPlanId?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.usersService.getAdvisoriesReportByCareer(
+      careerId ? parseInt(careerId) : undefined,
+      studyPlanId ? parseInt(studyPlanId) : undefined,
+      startDate ? new Date(startDate) : undefined,
+      endDate ? new Date(endDate) : undefined,
+    );
   }
 
   @Get('students/:studentId/subjects')
