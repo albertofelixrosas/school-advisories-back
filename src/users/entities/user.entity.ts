@@ -12,6 +12,7 @@ import { UserRole } from '../user-role.enum';
 import { SubjectDetails } from '../../subject-details/entities/subject-detail.entity';
 import { AdvisoryAttendance } from '../../advisory-attendance/entities/advisory-attendance.entity';
 import { Advisory } from '../../advisories/entities/advisory.entity';
+import { Career } from '../../careers/entities/career.entity';
 
 @Entity('users')
 export class User {
@@ -32,6 +33,12 @@ export class User {
 
   @Column({ nullable: true })
   school_id: number;
+
+  @Column({ nullable: true })
+  career_id: number;
+
+  @Column({ nullable: true })
+  enrollment_year: number;
 
   @Column({ unique: true })
   username: string;
@@ -60,6 +67,11 @@ export class User {
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  // Relations
+  @ManyToOne(() => Career, (career) => career.users)
+  @JoinColumn({ name: 'career_id' })
+  career: Career;
 
   @OneToMany(() => SubjectDetails, (details) => details.professor)
   subject_details: SubjectDetails[];
