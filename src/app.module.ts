@@ -18,6 +18,9 @@ import { User } from './users/entities/user.entity';
 import { RefreshToken } from './auth/entities/refresh-token.entity';
 import { SubjectDetails } from './subject-details/entities/subject-detail.entity';
 import { SubjectSchedule } from './subject-schedules/entities/subject-schedule.entity';
+import { Career } from './careers/entities/career.entity';
+import { StudyPlan } from './study-plans/entities/study-plan.entity';
+import { PlanSubject } from './plan-subjects/entities/plan-subject.entity';
 
 import { SubjectDetailsModule } from './subject-details/subject-details.module';
 import { SubjectSchedulesModule } from './subject-schedules/subject-schedules.module';
@@ -43,6 +46,9 @@ import { StudentInvitationsModule } from './student-invitations/student-invitati
 import { NotificationModule } from './notifications/notification.module';
 import { ProfessorAvailabilityModule } from './professor-availability/professor-availability.module';
 import { ProfessorAvailability } from './professor-availability/entities/professor-availability.entity';
+import { CareersModule } from './careers/careers.module';
+import { StudyPlansModule } from './study-plans/study-plans.module';
+import { PlanSubjectsModule } from './plan-subjects/plan-subjects.module';
 
 @Module({
   imports: [
@@ -92,6 +98,10 @@ import { ProfessorAvailability } from './professor-availability/entities/profess
           NotificationLogs,
           EmailTemplates,
           ProfessorAvailability,
+          // Academic entities
+          Career,
+          StudyPlan,
+          PlanSubject,
         ],
         synchronize: true, // solo para desarrollo
       }),
@@ -113,6 +123,10 @@ import { ProfessorAvailability } from './professor-availability/entities/profess
     StudentInvitationsModule,
     NotificationModule,
     ProfessorAvailabilityModule,
+    // Academic modules
+    CareersModule,
+    StudyPlansModule,
+    PlanSubjectsModule,
     SeedModule,
   ],
 })
