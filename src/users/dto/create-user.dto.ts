@@ -6,6 +6,8 @@ import {
   IsEmail,
   IsPhoneNumber,
   IsInt,
+  ValidateIf,
+  IsNotEmpty,
 } from 'class-validator';
 import { UserRole } from '../user-role.enum';
 import { Optional } from '@nestjs/common';
@@ -80,4 +82,25 @@ export class CreateUserDto {
   @IsOptional()
   @IsEnum(UserRole)
   role?: UserRole;
+
+  @ApiProperty({
+    example: 1,
+    description: 'ID de la carrera del estudiante (requerido para rol STUDENT)',
+    required: false,
+  })
+  @ValidateIf((o) => o.role === UserRole.STUDENT)
+  @IsNotEmpty({ message: 'career_id es requerido para estudiantes' })
+  @IsInt()
+  career_id?: number;
+
+  @ApiProperty({
+    example: 2023,
+    description:
+      'Año de ingreso del estudiante (requerido para rol STUDENT)',
+    required: false,
+  })
+  @ValidateIf((o) => o.role === UserRole.STUDENT)
+  @IsNotEmpty({ message: 'enrollment_year es requerido para estudiantes' })
+  @IsInt()
+  enrollment_year?: number;
 }
