@@ -7,10 +7,18 @@ import { Career } from '../careers/entities/career.entity';
 import { StudyPlan } from '../study-plans/entities/study-plan.entity';
 import { PlanSubject } from '../plan-subjects/entities/plan-subject.entity';
 import { Subject } from '../subjects/entities/subject.entity';
+import { SubjectDetails } from '../subject-details/entities/subject-detail.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Career, StudyPlan, PlanSubject, Subject]),
+    TypeOrmModule.forFeature([
+      User,
+      Career,
+      StudyPlan,
+      PlanSubject,
+      Subject,
+      SubjectDetails,
+    ]),
   ],
   controllers: [SeedController],
   providers: [SeedService],
