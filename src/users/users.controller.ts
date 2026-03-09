@@ -10,6 +10,7 @@ import {
   Put,
   UseGuards,
   Req,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { RequestWithUser } from '../auth/types/request-with-user';
@@ -25,6 +26,7 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
+import { AssignCareerDto, UpdateCareerDto } from './dto/assign-career.dto';
 import { AdminDashboardStatsDto } from './dto/admin-dashboard-stats.dto';
 import { ProfessorDashboardStatsDto } from './dto/professor-dashboard-stats.dto';
 import { StudentDashboardStatsDto } from './dto/student-dashboard-stats.dto';
@@ -32,11 +34,15 @@ import { Roles } from '../auth/roles.decorator';
 import { UserRole } from './user-role.enum';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
+import { AcademicService } from '../common/academic.service';
 
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly academicService: AcademicService,
+  ) {}
 
   @Post('register')
   @ApiOperation({ summary: 'Registrar un nuevo usuario' })
@@ -308,5 +314,107 @@ export class UsersController {
         error: 'Internal Server Error',
       };
     }
+  }
+
+  @Patch(':id/assign-career')
+  @ApiOperation({ summary: 'Asignar carrera y año de ingreso a un usuario' })
+  @ApiOkResponse({ description: 'Carrera asignada exitosamente' })
+  async assignCareer(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: AssignCareerDto,
+  ) {
+    return await this.usersService.assignCareer(
+      id,
+      dto.career_id,
+      dto.enrollment_year,
+    );
+  }
+
+  @Patch(':id/update-career')
+  @ApiOperation({ summary: 'Actualizar información de carrera de un usuario' })
+  @ApiOkResponse({ description: 'Información actualizada exitosamente' })
+  async updateCareer(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateCareerDto,
+  ) {
+    return await this.usersService.updateCareerInfo(
+      id,
+      dto.career_id,
+      dto.enrollment_year,
+    );
+  }
+
+  @Get(':id/academic-info')
+  @ApiOperation({
+    summary: 'Obtener información académica completa de un estudiante',
+  })
+  @ApiOkResponse({
+    description: 'Información académica incluyendo plan inferido',
+  })
+  async getAcademicInfo(@Param('id', ParseIntPipe) id: number) {
+    const user = await this.usersService.findWithCareer(id);
+
+    if (!user.career_id || !user.enrollment_year) {
+      return {
+        user: {
+          user_id: user.user_id,
+          name: user.name,
+          last_name: user.last_name,
+          career_id: user.career_id,
+          enrollment_year: user.enrollment_year,
+        },
+        academic_info: null,
+        message: 'Usuario sin carrera asignada',
+      };
+    }
+
+    const academicInfo = await this.academicService.getStudentAcademicInfo(
+      user.career_id,
+      user.enrollment_year,
+    );
+
+    return {
+      user: {
+        user_id: user.user_id,
+        name: user.name,
+        last_name: user.last_name,
+        career_id: user.career_id,
+        enrollment_year: user.enrollment_year,
+        career: user.career,
+      },
+      academic_info: academicInfo,
+    };
+  }
+
+  @Get(':id/plan-subjects')
+  @ApiOperation({
+    summary: 'Obtener materias del plan de estudios de un estudiante',
+  })
+  @ApiOkResponse({ description: 'Lista de materias del plan de estudios' })
+  async getStudentPlanSubjects(@Param('id', ParseIntPipe) id: number) {
+    const user = await this.usersService.findWithCareer(id);
+
+    if (!user.career_id || !user.enrollment_year) {
+      return {
+        message: 'Usuario sin carrera asignada',
+        subjects: [],
+      };
+    }
+
+    const subjects = await this.academicService.getStudentSubjects(
+      user.career_id,
+      user.enrollment_year,
+    );
+
+    return {
+      user: {
+        user_id: user.user_id,
+        name: user.name,
+        last_name: user.last_name,
+        career_id: user.career_id,
+        enrollment_year: user.enrollment_year,
+      },
+      subjects,
+    };
   }
 }

@@ -9,6 +9,9 @@ import { AdvisoryDate } from '../advisory-dates/entities/advisory-date.entity';
 import { AdvisoryRequest } from '../advisory-requests/entities/advisory-request.entity';
 import { AdvisoryAttendance } from '../advisory-attendance/entities/advisory-attendance.entity';
 import { Subject } from '../subjects/entities/subject.entity';
+import { StudyPlansModule } from '../study-plans/study-plans.module';
+import { PlanSubjectsModule } from '../plan-subjects/plan-subjects.module';
+import { AcademicService } from '../common/academic.service';
 
 @Module({
   imports: [
@@ -21,8 +24,10 @@ import { Subject } from '../subjects/entities/subject.entity';
       AdvisoryAttendance,
       Subject,
     ]),
+    StudyPlansModule,
+    PlanSubjectsModule,
   ],
-  providers: [UsersService],
+  providers: [UsersService, AcademicService],
   controllers: [UsersController],
   exports: [TypeOrmModule, UsersService],
 })

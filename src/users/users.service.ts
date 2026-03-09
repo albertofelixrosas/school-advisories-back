@@ -971,4 +971,63 @@ export class UsersService {
       );
     }
   }
+
+  /**
+   * Asigna una carrera y año de ingreso a un usuario (estudiante)
+   */
+  async assignCareer(
+    userId: number,
+    careerId: number,
+    enrollmentYear: number,
+  ): Promise<User> {
+    const user = await this.usersRepo.findOneBy({ user_id: userId });
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${userId} no encontrado`);
+    }
+
+    user.career_id = careerId;
+    user.enrollment_year = enrollmentYear;
+
+    return await this.usersRepo.save(user);
+  }
+
+  /**
+   * Actualiza la información de carrera de un usuario
+   */
+  async updateCareerInfo(
+    userId: number,
+    careerId?: number,
+    enrollmentYear?: number,
+  ): Promise<User> {
+    const user = await this.usersRepo.findOneBy({ user_id: userId });
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${userId} no encontrado`);
+    }
+
+    if (careerId !== undefined) {
+      user.career_id = careerId;
+    }
+
+    if (enrollmentYear !== undefined) {
+      user.enrollment_year = enrollmentYear;
+    }
+
+    return await this.usersRepo.save(user);
+  }
+
+  /**
+   * Obtiene usuarios con información de carrera
+   */
+  async findWithCareer(userId: number): Promise<User> {
+    const user = await this.usersRepo.findOne({
+      where: { user_id: userId },
+      relations: ['career'],
+    });
+
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${userId} no encontrado`);
+    }
+
+    return user;
+  }
 }
