@@ -31,6 +31,21 @@ export class CareersController {
     return this.careersService.findActive();
   }
 
+  @Get('statistics/all')
+  getAllCareersStats() {
+    return this.careersService.getAllCareersStats();
+  }
+
+  @Get('dashboard/academic')
+  getAcademicDashboard() {
+    return this.careersService.getAcademicDashboard();
+  }
+
+  @Get('statistics/:id')
+  getCareerStats(@Param('id', ParseIntPipe) id: number) {
+    return this.careersService.getCareerStats(id);
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.careersService.findOne(id);
