@@ -1,0 +1,81 @@
+id_materia,nombre
+1,Programación I
+2,Programación II
+3,Estructuras de Datos
+4,Bases de Datos
+5,Bases de Datos Avanzadas
+6,Arquitectura de Software
+7,Ingeniería de Requisitos
+8,Pruebas de Software
+9,Sistemas Operativos
+10,Redes de Computadoras
+11,Matemáticas Discretas
+12,Cálculo Diferencial
+13,Cálculo Integral
+14,Álgebra Lineal
+15,Probabilidad y Estadística
+16,Métodos Numéricos
+17,Aplicaciones Web
+18,Aplicaciones Móviles
+19,Sistemas Distribuidos
+20,Gestión de Proyectos de Software
+21,Introducción a la Psicología
+22,Psicología del Desarrollo
+23,Psicología Social
+24,Psicología Cognitiva
+25,Psicología Organizacional
+26,Psicopatología
+27,Evaluación Psicológica
+28,Terapia Cognitivo Conductual
+29,Neuropsicología
+30,Metodología de la Investigación
+31,Estadística Aplicada
+32,Ética Profesional
+33,Salud y Desarrollo Personal
+34,Comunicación Oral y Escrita
+35,Inglés I
+36,Inglés II
+37,Inglés III
+38,Administración I
+39,Administración II
+40,Contabilidad I
+41,Contabilidad II
+42,Finanzas
+43,Economía
+44,Marketing
+45,Investigación de Mercados
+46,Gestión del Talento Humano
+47,Planeación Estratégica
+48,Logística
+49,Ingeniería de Métodos
+50,Control de Calidad
+51,Producción Industrial
+52,Simulación de Sistemas
+53,Investigación de Operaciones
+54,Gestión de Operaciones
+55,Pedagogía
+56,Didáctica General
+57,Psicología Educativa
+58,Diseño Curricular
+59,Tecnología Educativa
+60,Evaluación Educativa
+61,Sistemas de Información
+62,Análisis de Sistemas
+63,Diseño de Sistemas
+64,Gobernanza de TI
+65,Seguridad Informática
+66,Auditoría de Sistemas
+67,Comercio Electrónico
+68,Emprendimiento
+69,Innovación Empresarial
+70,Inteligencia de Negocios
+71,Big Data
+72,Minería de Datos
+73,Visualización de Datos
+74,Gestión de Proyectos
+75,Liderazgo Organizacional
+76,Negociación Empresarial
+77,Ética y Ciudadanía
+78,Axiología Profesional
+79,Práctica Profesional
+80,Seminario de Titulación
