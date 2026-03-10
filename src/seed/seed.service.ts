@@ -84,7 +84,9 @@ export class SeedService {
   private async clearSubjectDetails() {
     console.log('🧹 Limpiando asignaciones de materias-profesor existentes...');
     try {
-      await this.subjectDetailsRepo.delete({});
+      await this.subjectDetailsRepo.query(
+        'TRUNCATE TABLE "subject_schedules", "subject_details" RESTART IDENTITY CASCADE',
+      );
       console.log('🗑️ Asignaciones materias-profesor limpiadas exitosamente');
     } catch (error) {
       console.log(
@@ -97,8 +99,9 @@ export class SeedService {
   private async clearUsers() {
     console.log('🧹 Limpiando usuarios existentes...');
     try {
-      // Eliminar usuarios con delete() que respeta las foreign keys
-      await this.usersRepo.delete({});
+      await this.usersRepo.query(
+        'TRUNCATE TABLE "users" RESTART IDENTITY CASCADE',
+      );
       console.log('🗑️ Tabla de usuarios limpiada exitosamente');
     } catch (error) {
       console.log(
@@ -111,11 +114,10 @@ export class SeedService {
   private async clearAcademicData() {
     console.log('🧹 Limpiando datos académicos existentes...');
     try {
-      // Eliminar en orden inverso a las dependencias
-      await this.planSubjectsRepo.delete({});
-      await this.studyPlansRepo.delete({});
-      await this.careersRepo.delete({});
-      // Nota: no borramos subjects porque pueden estar en uso por subject_details
+      await this.planSubjectsRepo.query(
+        'TRUNCATE TABLE "plan_subjects", "study_plans", "careers" RESTART IDENTITY CASCADE',
+      );
+      // Nota: no borramos subjects porque pueden estar en uso por otros modulos
       console.log('🗑️ Datos académicos limpiados exitosamente');
     } catch (error) {
       console.log(
@@ -147,13 +149,16 @@ export class SeedService {
     const careers: Career[] = [];
 
     for (const data of careersData) {
-      // Verificar si la carrera ya existe
+      const careerId = parseInt(data.id_carrera);
+
+      // Conservar IDs de CSV para mantener referencias estables
       let career = await this.careersRepo.findOne({
-        where: { name: data.nombre },
+        where: { career_id: careerId },
       });
 
       if (!career) {
         career = this.careersRepo.create({
+          career_id: careerId,
           name: data.nombre,
           is_active: true,
         });
@@ -172,16 +177,18 @@ export class SeedService {
     const studyPlans: StudyPlan[] = [];
 
     for (const data of plansData) {
-      // Verificar si el plan ya existe
+      const planId = parseInt(data.id_plan);
+
+      // Conservar IDs de CSV para que plan_materias mantenga integridad
       let studyPlan = await this.studyPlansRepo.findOne({
         where: {
-          career_id: parseInt(data.carrera_id),
-          year: parseInt(data.anio),
+          study_plan_id: planId,
         },
       });
 
       if (!studyPlan) {
         studyPlan = this.studyPlansRepo.create({
+          study_plan_id: planId,
           career_id: parseInt(data.carrera_id),
           year: parseInt(data.anio),
           is_active: true,
