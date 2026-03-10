@@ -57,7 +57,9 @@ export class SeedService {
     console.log(`✅ Creados ${users.length} usuarios`);
 
     const subjectDetails = await this.createSubjectDetails(users, subjects);
-    console.log(`✅ Creadas ${subjectDetails.length} asignaciones profesor-materia`);
+    console.log(
+      `✅ Creadas ${subjectDetails.length} asignaciones profesor-materia`,
+    );
 
     console.log('🎉 Seeding completado exitosamente!');
 
@@ -481,14 +483,22 @@ export class SeedService {
 
     users
       .filter((user) => user.role === UserRole.PROFESSOR)
-      .forEach((professor) => professorByUsername.set(professor.username, professor));
+      .forEach((professor) =>
+        professorByUsername.set(professor.username, professor),
+      );
 
     subjects.forEach((subject) => subjectByName.set(subject.subject, subject));
 
-    const assignments: Array<{ professorUsername: string; subjectName: string }> = [
+    const assignments: Array<{
+      professorUsername: string;
+      subjectName: string;
+    }> = [
       { professorUsername: 'mgarcia', subjectName: 'Programación I' },
       { professorUsername: 'mgarcia', subjectName: 'Programación II' },
-      { professorUsername: 'mgarcia', subjectName: 'Metodología de la Investigación' },
+      {
+        professorUsername: 'mgarcia',
+        subjectName: 'Metodología de la Investigación',
+      },
       { professorUsername: 'lramirez', subjectName: 'Inglés I' },
       { professorUsername: 'lramirez', subjectName: 'Inglés II' },
       { professorUsername: 'lramirez', subjectName: 'Inglés III' },
@@ -497,10 +507,19 @@ export class SeedService {
       { professorUsername: 'jtorres', subjectName: 'Minería de Datos' },
       { professorUsername: 'cgomez', subjectName: 'Psicología Cognitiva' },
       { professorUsername: 'cgomez', subjectName: 'Psicología Social' },
-      { professorUsername: 'cgomez', subjectName: 'Metodología de la Investigación' },
-      { professorUsername: 'aperez', subjectName: 'Probabilidad y Estadística' },
+      {
+        professorUsername: 'cgomez',
+        subjectName: 'Metodología de la Investigación',
+      },
+      {
+        professorUsername: 'aperez',
+        subjectName: 'Probabilidad y Estadística',
+      },
       { professorUsername: 'aperez', subjectName: 'Estadística Aplicada' },
-      { professorUsername: 'fpineda', subjectName: 'Comunicación Oral y Escrita' },
+      {
+        professorUsername: 'fpineda',
+        subjectName: 'Comunicación Oral y Escrita',
+      },
       { professorUsername: 'fpineda', subjectName: 'Ética Profesional' },
     ];
 
